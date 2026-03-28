@@ -28,8 +28,8 @@ interface AuthTokens {
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithCode: (code: string, redirectUri: string) => Promise<void>;
+  login: (email: string, password: string, redirectTo?: string) => Promise<void>;
+  loginWithCode: (code: string, redirectUri: string, redirectTo?: string) => Promise<void>;
   logout: () => void;
   getToken: () => string | null;
 }
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (email: string, password: string) => {
+    async (email: string, password: string, redirectTo?: string) => {
       const res = await apiClient.post("/auth/login", { email, password });
       const data = res.data;
 
@@ -125,13 +125,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       storeTokens(tokens);
       const u = extractUser(tokens.idToken);
       setUser(u);
-      router.push("/dashboard");
+      router.push(redirectTo || "/projects");
     },
     [router],
   );
 
   const loginWithCode = useCallback(
-    async (code: string, redirectUri: string) => {
+    async (code: string, redirectUri: string, redirectTo?: string) => {
       const res = await apiClient.post("/auth/sso/callback", { code, redirectUri });
       const data = res.data;
 
@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       storeTokens(tokens);
       const u = extractUser(tokens.idToken);
       setUser(u);
-      router.push("/dashboard");
+      router.push(redirectTo || "/projects");
     },
     [router],
   );
