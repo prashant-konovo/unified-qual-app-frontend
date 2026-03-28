@@ -29,6 +29,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithCode: (code: string, redirectUri: string) => Promise<void>;
   logout: () => void;
   getToken: () => string | null;
 }
@@ -129,6 +130,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [router],
   );
 
+  const loginWithCode = useCallback(
+    async (code: string, redirectUri: string) => {
+      const res = await apiClient.post("/auth/sso/callback", { code, redirectUri });
+      const data = res.data;
+
+      const tokens: AuthTokens = {
+        idToken:
+          data.IdToken ?? data.idToken ?? "",
+        accessToken:
+          data.AccessToken ?? data.accessToken ?? "",
+        refreshToken:
+          data.RefreshToken ?? data.refreshToken ?? "",
+      };
+
+      if (!tokens.idToken) {
+        throw new Error("SSO login failed — no token returned");
+      }
+
+      storeTokens(tokens);
+      const u = extractUser(tokens.idToken);
+      setUser(u);
+      router.push("/dashboard");
+    },
+    [router],
+  );
+
   const logout = useCallback(() => {
     clearTokens();
     setUser(null);
@@ -147,8 +174,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isLoading, login, logout, getToken }),
-    [user, isLoading, login, logout, getToken],
+    () => ({ user, isLoading, login, loginWithCode, logout, getToken }),
+    [user, isLoading, login, loginWithCode, logout, getToken],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

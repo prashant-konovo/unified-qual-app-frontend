@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import apiClient from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,6 +24,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,6 +45,23 @@ export default function LoginPage() {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSSO() {
+    setSsoLoading(true);
+    setError("");
+    try {
+      const res = await apiClient.get("/auth/sso/config");
+      const { authorizeUrl } = res.data?.data ?? res.data ?? {};
+      if (!authorizeUrl) {
+        setError("SSO is not configured");
+        return;
+      }
+      window.location.href = authorizeUrl;
+    } catch {
+      setError("Failed to initiate SSO login");
+      setSsoLoading(false);
     }
   }
 
@@ -105,6 +124,32 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+
+          <Button
+            className="w-full"
+            disabled={ssoLoading}
+            onClick={handleSSO}
+            type="button"
+            variant="outline"
+          >
+            {ssoLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Redirecting…
+              </>
+            ) : (
+              "Sign in with SSO"
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>
