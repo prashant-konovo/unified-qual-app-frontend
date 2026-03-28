@@ -23,13 +23,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/lib/auth-context";
 
 const data = {
-  user: {
-    name: "Pramod",
-    email: "pramod@konovo.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Projects",
@@ -81,6 +77,13 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth();
+  const displayUser = {
+    name: user?.username ?? user?.email?.split("@")[0] ?? "User",
+    email: user?.email ?? "",
+    avatar: "/avatars/shadcn.jpg",
+  };
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -99,7 +102,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">Konovo</span>
-                  {/* <span className="truncate text-xs">Qual Scheduler</span> */}
                 </div>
               </a>
             </SidebarMenuButton>
@@ -110,7 +112,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={displayUser} />
       </SidebarFooter>
     </Sidebar>
   );
