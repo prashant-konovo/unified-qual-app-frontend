@@ -61,7 +61,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
           <CardDescription>
-            Enter your credentials to access Qual Scheduler
+            Enter your credentials to access Unified Qual
           </CardDescription>
         </CardHeader>
         <CardContent>
