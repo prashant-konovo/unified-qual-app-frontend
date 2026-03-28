@@ -4,6 +4,7 @@ frontend:
     preBuild:
       commands:
         - npm ci --cache .npm --prefer-offline
+        - npm run lint
     build:
       commands:
         - env | grep -e NEXT_PUBLIC_ >> .env.production
