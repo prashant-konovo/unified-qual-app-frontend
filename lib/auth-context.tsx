@@ -12,11 +12,14 @@ import type React from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "@/lib/axios";
 
+type UnifiedRole = "admin" | "manager" | "moderator" | "observer" | "external";
+
 interface User {
   sub: string;
   email: string;
   username: string;
   groups: string[];
+  roles: UnifiedRole[];
 }
 
 interface AuthTokens {
@@ -32,6 +35,10 @@ interface AuthContextValue {
   loginWithCode: (code: string, redirectUri: string, redirectTo?: string) => Promise<void>;
   logout: () => void;
   getToken: () => string | null;
+  hasRole: (...roles: UnifiedRole[]) => boolean;
+  isAdmin: boolean;
+  isManager: boolean;
+  isModerator: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -70,15 +77,61 @@ function parseJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
+// Maps Cognito groups to unified roles (must mirror backend middleware/roles.go)
+const COGNITO_GROUP_TO_ROLE: Record<string, UnifiedRole> = {
+  QUAL_SCHEDULER_ADMIN: "admin",
+  ADMIN: "admin",
+  AdminUsers: "admin",
+  SHG_ADMIN: "admin",
+  PANEL_ADMIN: "admin",
+  QUAL_SCHEDULER_MANAGER: "manager",
+  SUBSCRIPTION_OWNER: "manager",
+  SUBSCRIPTION_ADMIN: "manager",
+  QUAL_SCHEDULER_MODERATOR: "moderator",
+  CLIENT_MODERATOR: "moderator",
+  SUBSCRIPTION_USER: "observer",
+  EXTERNAL_PANELIST_PROVIDER: "external",
+  RESPONDER: "external",
+  Responder: "external",
+};
+
+const ROLE_PRIORITY: Record<UnifiedRole, number> = {
+  admin: 0,
+  manager: 1,
+  moderator: 2,
+  observer: 3,
+  external: 4,
+};
+
+function mapGroupsToRoles(groups: string[]): UnifiedRole[] {
+  const seen = new Set<UnifiedRole>();
+  for (const g of groups) {
+    const role = COGNITO_GROUP_TO_ROLE[g];
+    if (role) seen.add(role);
+  }
+  return Array.from(seen).sort((a, b) => ROLE_PRIORITY[a] - ROLE_PRIORITY[b]);
+}
+
 function extractUser(idToken: string): User | null {
   const claims = parseJwtPayload(idToken);
   if (!claims) return null;
+  const groups = (claims["cognito:groups"] as string[]) ?? [];
   return {
     sub: (claims.sub as string) ?? "",
     email: (claims.email as string) ?? "",
     username: (claims["cognito:username"] as string) ?? "",
-    groups: (claims["cognito:groups"] as string[]) ?? [],
+    groups,
+    roles: mapGroupsToRoles(groups),
   };
+}
+
+// Role-based default landing page (mirrors legacy QS-Tool redirect logic)
+function defaultRedirect(u: User | null): string {
+  if (!u || u.roles.length === 0) return "/projects";
+  const top = u.roles[0]; // highest-priority role
+  if (top === "admin" || top === "manager") return "/projects";
+  if (top === "moderator") return "/interviews";
+  return "/interviews";
 }
 
 function isTokenExpired(token: string): boolean {
@@ -125,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       storeTokens(tokens);
       const u = extractUser(tokens.idToken);
       setUser(u);
-      router.push(redirectTo || "/projects");
+      router.push(redirectTo || defaultRedirect(u));
     },
     [router],
   );
@@ -151,7 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       storeTokens(tokens);
       const u = extractUser(tokens.idToken);
       setUser(u);
-      router.push(redirectTo || "/projects");
+      router.push(redirectTo || defaultRedirect(u));
     },
     [router],
   );
@@ -173,9 +226,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return tokens.idToken;
   }, []);
 
+  const hasRole = useCallback(
+    (...roles: UnifiedRole[]) => {
+      if (!user) return false;
+      return roles.some((r) => user.roles.includes(r));
+    },
+    [user],
+  );
+
+  const isAdmin = useMemo(() => hasRole("admin"), [hasRole]);
+  const isManager = useMemo(() => hasRole("manager"), [hasRole]);
+  const isModerator = useMemo(() => hasRole("moderator"), [hasRole]);
+
   const value = useMemo(
-    () => ({ user, isLoading, login, loginWithCode, logout, getToken }),
-    [user, isLoading, login, loginWithCode, logout, getToken],
+    () => ({ user, isLoading, login, loginWithCode, logout, getToken, hasRole, isAdmin, isManager, isModerator }),
+    [user, isLoading, login, loginWithCode, logout, getToken, hasRole, isAdmin, isManager, isModerator],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
