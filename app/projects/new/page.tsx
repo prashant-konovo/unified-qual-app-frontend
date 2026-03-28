@@ -211,7 +211,7 @@ export default function NewProjectWizard() {
           rules: surveyRules,
         };
         const createdSurvey = await surveysApi.createSurvey(newSurveyPayload);
-        if (createdSurvey && createdSurvey.id) {
+        if (createdSurvey?.id) {
           finalSurveyId = createdSurvey.id;
         }
       } else if (surveyMode === "attach" && linkedSurveyId) {

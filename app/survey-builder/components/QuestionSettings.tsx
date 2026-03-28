@@ -37,15 +37,15 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   rating: "Rating",
 };
 
-type Props = {
+interface Props {
+  onAddRule: (rule: Omit<ScreeningRule, "id">) => void;
+  onDeleteRule: (id: string) => void;
+  onUpdate: (updates: Partial<SurveyQuestion>) => void;
+  onUpdateRule: (id: string, updates: Partial<ScreeningRule>) => void;
   question: SurveyQuestion;
   questionIndex: number;
   rules: ScreeningRule[];
-  onUpdate: (updates: Partial<SurveyQuestion>) => void;
-  onAddRule: (rule: Omit<ScreeningRule, "id">) => void;
-  onUpdateRule: (id: string, updates: Partial<ScreeningRule>) => void;
-  onDeleteRule: (id: string) => void;
-};
+}
 
 export function QuestionSettings({
   question,

@@ -121,7 +121,7 @@ function initFromEvent(
 
 function resetToDefaults(
   defaultModeratorId: string,
-  projects: ProjectOption[],
+  _projects: ProjectOption[],
   setModeratorId: (v: string) => void,
   setProject: (v: string) => void,
   setStartTime: (v: string) => void,

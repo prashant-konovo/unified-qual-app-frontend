@@ -167,8 +167,8 @@ export default function ProjectsPage() {
       }
       if (sort === "created") {
         // Fallback to numeric id parsing assumption
-        const aVal = Number.parseInt(a.id.replace(/\D/g, "") || "0");
-        const bVal = Number.parseInt(b.id.replace(/\D/g, "") || "0");
+        const aVal = Number.parseInt(a.id.replace(/\D/g, "") || "0", 10);
+        const bVal = Number.parseInt(b.id.replace(/\D/g, "") || "0", 10);
         return aVal - bVal;
       }
       return 0;
@@ -184,7 +184,7 @@ export default function ProjectsPage() {
         onDuplicate: handleDuplicate,
         onDelete: handleDelete,
       }),
-    []
+    [handleDelete, handleDuplicate]
   );
 
   return (

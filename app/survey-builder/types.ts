@@ -7,39 +7,39 @@ export type QuestionType =
   | "number"
   | "rating";
 
-export type SurveyQuestion = {
-  id: string;
-  type: QuestionType;
-  question: string;
+export interface SurveyQuestion {
   description?: string;
-  required: boolean;
-  options?: string[]; // for single_choice, multiple_choice, dropdown
-  ratingMax?: number; // for rating questions, default 5
-};
-
-export type ScreeningRule = {
   id: string;
-  questionId: string;
+  options?: string[]; // for single_choice, multiple_choice, dropdown
+  question: string;
+  ratingMax?: number; // for rating questions, default 5
+  required: boolean;
+  type: QuestionType;
+}
+
+export interface ScreeningRule {
+  action: "qualify" | "disqualify";
   condition:
     | "equals"
     | "not_equals"
     | "contains"
     | "greater_than"
     | "less_than";
+  id: string;
+  questionId: string;
   value: string;
-  action: "qualify" | "disqualify";
-};
+}
 
-export type Survey = {
+export interface Survey {
+  crowdId: string;
+  crowdName: string;
   id: string;
   projectId: string;
   projectName: string;
-  crowdId: string;
-  crowdName: string;
-  status: "draft" | "published";
   questions: SurveyQuestion[];
   rules: ScreeningRule[];
-};
+  status: "draft" | "published";
+}
 
 export const QUESTION_TYPE_META: Record<
   QuestionType,

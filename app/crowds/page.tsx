@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function CrowdsPage() {
-  const [data, setData] = useState(mockCrowds);
+  const [data, _setData] = useState(mockCrowds);
 
   return (
     <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-background/95">

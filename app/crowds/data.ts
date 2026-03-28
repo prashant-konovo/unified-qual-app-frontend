@@ -1,23 +1,23 @@
-export type CrowdAttribute = {
-  id: string;
-  name: string;
+export interface CrowdAttribute {
   choices: string[];
-};
-
-export type Crowd = {
   id: string;
   name: string;
-  description: string;
-  members: number;
-  expectedCompletes: number;
-  subscription: string;
-  type: "Profile" | "Custom" | "Employee";
+}
+
+export interface Crowd {
+  attributes: CrowdAttribute[];
   country: string;
+  description: string;
+  expectedCompletes: number;
+  id: string;
+  members: number;
+  name: string;
+  panels: string[];
   professions: string[];
   specialties: string[];
-  panels: string[];
-  attributes: CrowdAttribute[];
-};
+  subscription: string;
+  type: "Profile" | "Custom" | "Employee";
+}
 
 export const mockCrowds: Crowd[] = [
   {

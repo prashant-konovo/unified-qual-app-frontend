@@ -4,10 +4,10 @@ import { PlusIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-type Props = {
-  options: string[];
+interface Props {
   onChange: (options: string[]) => void;
-};
+  options: string[];
+}
 
 export function ChoiceEditor({ options, onChange }: Props) {
   const handleChange = (index: number, value: string) => {

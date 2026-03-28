@@ -514,17 +514,16 @@ export function CreateCrowdWizard() {
                   </div>
                 </div>
 
-                {form.getValues("attributes") &&
-                  form.getValues("attributes")!.length > 0 && (
+                {(form.getValues("attributes")?.length ?? 0) > 0 && (
                     <div className="space-y-4 rounded-lg border bg-muted/10 p-5">
                       <h4 className="flex justify-between border-b pb-2 font-semibold text-sm">
                         <span>Dynamic Attributes</span>
                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary text-xs">
-                          {form.getValues("attributes")!.length}
+                          {form.getValues("attributes")?.length}
                         </span>
                       </h4>
                       <ul className="mt-3 space-y-3 text-sm">
-                        {form.getValues("attributes")!.map((attr, i) => (
+                        {form.getValues("attributes")?.map((attr, i) => (
                           <li
                             className="flex items-start gap-4 rounded-md border bg-background p-2"
                             key={i}

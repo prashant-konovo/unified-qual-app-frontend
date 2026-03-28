@@ -29,12 +29,12 @@ function defaultQuestion(type: QuestionType): SurveyQuestion {
   };
 }
 
-type Props = {
-  questions: SurveyQuestion[];
-  rules: ScreeningRule[];
+interface Props {
   onQuestionsChange: (questions: SurveyQuestion[]) => void;
   onRulesChange: (rules: ScreeningRule[]) => void;
-};
+  questions: SurveyQuestion[];
+  rules: ScreeningRule[];
+}
 
 export function SurveyBuilderStep({
   questions,

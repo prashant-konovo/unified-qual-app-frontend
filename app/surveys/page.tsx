@@ -150,7 +150,7 @@ export default function SurveysPage() {
         onDelete: handleDelete,
         onAttach: handleAttach,
       }),
-    []
+    [handleAttach, handleDelete]
   );
 
   return (

@@ -78,7 +78,7 @@ function SurveyBuilderInner() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
+  const [_saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
     "idle"
   );
   const [isLoading, setIsLoading] = useState(true);
@@ -225,7 +225,7 @@ function SurveyBuilderInner() {
         ) {
           // If not found or not implemented, try creating via POST
           const created = await surveysApi.createSurvey(dataToSave);
-          if (created && created.id) {
+          if (created?.id) {
             setSurvey((prev) => ({ ...prev, id: created.id }));
           }
         } else {

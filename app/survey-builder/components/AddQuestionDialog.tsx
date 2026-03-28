@@ -20,13 +20,13 @@ import {
 import { cn } from "@/lib/utils";
 import type { QuestionType } from "../types";
 
-type TypeOption = {
-  type: QuestionType;
-  label: string;
+interface TypeOption {
+  color: string;
   description: string;
   icon: React.ReactNode;
-  color: string;
-};
+  label: string;
+  type: QuestionType;
+}
 
 const TYPE_OPTIONS: TypeOption[] = [
   {
@@ -80,11 +80,11 @@ const TYPE_OPTIONS: TypeOption[] = [
   },
 ];
 
-type Props = {
-  open: boolean;
+interface Props {
   onOpenChange: (v: boolean) => void;
   onSelectType: (type: QuestionType) => void;
-};
+  open: boolean;
+}
 
 export function AddQuestionDialog({ open, onOpenChange, onSelectType }: Props) {
   return (

@@ -22,19 +22,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type Project = {
+export interface Project {
   id: string;
-  name: string;
-  status: "Draft" | "In Progress" | "Completed" | "Archived";
-  owner: string;
   lastUpdated: string;
-  updatedAgo: string;
+  name: string;
+  owner: string;
+  status: "Draft" | "In Progress" | "Completed" | "Archived";
   subscriptionId?: string;
   subscriptionName?: string;
   surveyId?: string;
-  surveyTitle?: string;
   surveyStatus?: string;
-};
+  surveyTitle?: string;
+  updatedAgo: string;
+}
 
 export const getColumns = (actions: {
   onDuplicate: (project: Project) => void;
