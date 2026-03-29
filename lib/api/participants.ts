@@ -84,8 +84,8 @@ function mapParticipant(raw: any): Participant {
   return {
     id: String(raw.id ?? ""),
     name:
-      raw.name ??
-      `${raw.firstName ?? ""} ${raw.lastName ?? ""}`.trim() ||
+      (raw.name ??
+      `${raw.firstName ?? ""} ${raw.lastName ?? ""}`.trim()) ||
       "",
     email: raw.email ?? "",
     phone: raw.phone,

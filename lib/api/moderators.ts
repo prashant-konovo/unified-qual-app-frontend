@@ -47,8 +47,8 @@ function mapModerator(raw: any): Moderator {
     ...raw,
     id: raw.id,
     name:
-      raw.name ??
-      `${raw.firstName ?? ""} ${raw.lastName ?? ""}`.trim() ||
+      (raw.name ??
+      `${raw.firstName ?? ""} ${raw.lastName ?? ""}`.trim()) ||
       "",
     email: raw.email ?? "",
     role: raw.role ?? raw.roles?.[0] ?? "moderator",
