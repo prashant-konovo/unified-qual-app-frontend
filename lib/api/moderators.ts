@@ -1,24 +1,33 @@
 import apiClient from "../axios";
 
-/**
- * User is the canonical type for all platform users stored in the "users" collection.
- * The `role` field differentiates moderators, admins, etc.
- */
-export interface User {
-  createdAt?: string;
-  email: string;
-  id: string;
-  isDeleted?: boolean;
-  lastActive?: string;
+export type ServiceCategory = "LS" | "MRA";
+export type ModeratorSource = "qs" | "iris";
+
+export interface Moderator {
+  id: number;
   name: string;
+  email: string;
   phone?: string;
-  role: "moderator" | "admin";
+  role: string;
+  roles?: string[];
   status: "active" | "inactive";
+  source?: ModeratorSource;
+  serviceCategory?: ServiceCategory;
+  timezone?: string;
+  firstName?: string;
+  lastName?: string;
+  moderatorBuffer?: number;
+  termsAccepted?: boolean;
   updatedAt?: string;
+  createdAt?: string;
+  lastActive?: string;
+  registeredAt?: string;
+  lastLogin?: string;
+  isDeleted?: boolean;
 }
 
-/** Convenience alias — moderator pages can import either name. */
-export type Moderator = User;
+/** Backward compat alias. */
+export type User = Moderator;
 
 export interface BulkUploadResult {
   created: number;
@@ -30,30 +39,32 @@ export const moderatorsApi = {
   getModeratorsList: async (status?: string): Promise<Moderator[]> => {
     const params = status ? { status } : {};
     const response = await apiClient.get("/moderators", { params });
-    return response.data;
+    // API returns array directly (not envelope)
+    return Array.isArray(response.data) ? response.data : [];
   },
 
-  getModerator: async (id: string): Promise<Moderator> => {
-    const response = await apiClient.get(`/moderators/${id}`);
+  getModerator: async (id: string | number, source?: string): Promise<Moderator> => {
+    const params = source ? { source } : {};
+    const response = await apiClient.get(`/moderators/${id}`, { params });
     return response.data;
   },
 
   createModerator: async (
-    data: Omit<Moderator, "id" | "createdAt" | "updatedAt" | "isDeleted">
+    data: Partial<Moderator>
   ): Promise<Moderator> => {
     const response = await apiClient.post("/moderators", data);
-    return response.data;
+    return response.data?.data ?? response.data;
   },
 
   updateModerator: async (
-    id: string,
+    id: string | number,
     data: Partial<Moderator>
   ): Promise<Moderator> => {
     const response = await apiClient.put(`/moderators/${id}`, data);
-    return response.data;
+    return response.data?.data ?? response.data;
   },
 
-  deleteModerator: async (id: string): Promise<void> => {
+  deleteModerator: async (id: string | number): Promise<void> => {
     await apiClient.delete(`/moderators/${id}`);
   },
 

@@ -106,7 +106,7 @@ export default function Page() {
     moderatorsApi
       .getModeratorsList("active")
       .then((mods) => {
-        setModerators(mods.map((m) => ({ id: m.id, name: m.name })));
+        setModerators(mods.map((m) => ({ id: String(m.id), name: m.name })));
       })
       .catch(() => {
         toast.error("Failed to load moderators");
