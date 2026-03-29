@@ -9,7 +9,8 @@
     "lint": "biome check",
     "format": "biome format --write",
     "check": "ultracite check",
-    "fix": "ultracite fix"
+    "fix": "ultracite fix",
+    "test:uat": "node --test tests/uat/*.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
