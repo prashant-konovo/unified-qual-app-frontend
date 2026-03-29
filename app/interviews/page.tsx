@@ -85,6 +85,7 @@ function bookingToInterview(b: EnrichedBooking): Interview {
     account: b.projectName || "—",
     client: b.projectName || "—",
     project: b.projectName || "—",
+    serviceCategory: b.serviceCategory || "MRA",
     meetingLink: b.meetingLink,
   };
 }
@@ -138,13 +139,55 @@ export default function Page() {
     [activeTab, loadInterviews]
   );
 
+  const handleCancel = useCallback(
+    async (id: string) => {
+      try {
+        await bookingsApi.cancelInterview(id);
+        toast.success("Interview cancelled");
+        loadInterviews(activeTab);
+      } catch {
+        toast.error("Failed to cancel interview");
+      }
+    },
+    [activeTab, loadInterviews]
+  );
+
+  const handleReschedule = useCallback(
+    async (interview: Interview) => {
+      // For now, prompt for a simple reschedule with a 1-hour shift
+      const confirmed = window.confirm(
+        `Reschedule interview "${interview.title}"?\nThis will shift the timeslot forward by 1 day. For custom rescheduling, use the calendar.`
+      );
+      if (!confirmed) return;
+      try {
+        const orig = new Date(interview.date);
+        const newStart = new Date(orig.getTime() + 86400000);
+        const durationMs =
+          (parseInt(interview.duration) || 60) * 60000;
+        const newEnd = new Date(newStart.getTime() + durationMs);
+        await bookingsApi.rescheduleInterview(interview.id, {
+          newStartTime: newStart.toISOString(),
+          newEndTime: newEnd.toISOString(),
+          reason: "Rescheduled via admin UI",
+        });
+        toast.success("Interview rescheduled");
+        loadInterviews(activeTab);
+      } catch {
+        toast.error("Failed to reschedule interview");
+      }
+    },
+    [activeTab, loadInterviews]
+  );
+
   const columns = useMemo(
     () =>
       createColumns({
         onCreditRewards: handleCreditRewards,
         onInvalidate: handleInvalidate,
+        onCancelInterview: handleCancel,
+        onRescheduleInterview: handleReschedule,
       }),
-    [handleCreditRewards, handleInvalidate]
+    [handleCreditRewards, handleInvalidate, handleCancel, handleReschedule]
   );
 
   return (

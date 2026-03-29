@@ -236,8 +236,8 @@ function ProjectDetailsInner() {
               </CardContent>
             </Card>
 
-            {/* Scheduling Stats Card (LS only) */}
-            {isLS && (
+            {/* Scheduling Stats Card (both LS and MRA — QS has scheduling data) */}
+            {(project.scheduledCount != null || project.completedCount != null || project.sampleSize != null) && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">

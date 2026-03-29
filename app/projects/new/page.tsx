@@ -220,21 +220,21 @@ export default function NewProjectWizard() {
 
       const fullPayload = {
         name: data.projectName,
-        owner: "Current User",
-        status: "Draft",
-        interviewLength: data.interviewLength,
-        salesforceProject: data.salesforceProject,
-        participantGroups: data.participantGroups,
-        recruitmentDate: data.recruitmentDate,
-        enableStimulusSharing: data.enableStimulusSharing,
-        transcription: data.transcription,
-        notes: data.notes,
-        surveyId: finalSurveyId,
+        source: "qs", // default to QS (MRA)
+        interviewLength: data.interviewLength
+          ? Number(data.interviewLength)
+          : undefined,
+        salesforceJobNumber: data.salesforceProject || undefined,
+        sampleSize: data.participantGroups.reduce(
+          (sum, g) => sum + g.sampleSize,
+          0
+        ),
         subscriptionId:
-          data.subscriptionId === "none" ? undefined : data.subscriptionId,
-        conferenceType:
-          data.conferenceType === "none" ? undefined : data.conferenceType,
-        conferenceLink: data.conferenceLink || undefined,
+          data.subscriptionId === "none"
+            ? undefined
+            : data.subscriptionId
+              ? Number(data.subscriptionId)
+              : undefined,
       };
 
       console.log("Creating Project with payload:", fullPayload);
@@ -436,40 +436,25 @@ export default function NewProjectWizard() {
                         className="font-semibold text-foreground"
                         htmlFor="salesforceProject"
                       >
-                        Salesforce Project
+                        Salesforce Job Number
                       </Label>
-                      <Controller
-                        control={control}
-                        name="salesforceProject"
-                        render={({ field }) => (
-                          <Select
-                            defaultValue={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger
-                              className={
-                                errors.salesforceProject ? "border-red-500" : ""
-                              }
-                            >
-                              <SelectValue placeholder="Link to Salesforce Opportunity..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="opp-1">
-                                Acme Corp Enterprise Expansion
-                              </SelectItem>
-                              <SelectItem value="opp-2">
-                                GlobalTech License Renewal
-                              </SelectItem>
-                              <SelectItem value="opp-3">
-                                Stark Industries Phase 1
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
+                      <Input
+                        id="salesforceProject"
+                        placeholder="e.g. SF-JOB-12345"
+                        {...register("salesforceProject")}
+                        className={
+                          errors.salesforceProject
+                            ? "border-red-500 focus-visible:ring-red-500"
+                            : ""
+                        }
                       />
-                      {errors.salesforceProject && (
+                      {errors.salesforceProject ? (
                         <p className="text-red-500 text-sm">
                           {errors.salesforceProject.message}
+                        </p>
+                      ) : (
+                        <p className="text-muted-foreground text-sm">
+                          Enter the Salesforce job number for billing.
                         </p>
                       )}
                     </div>
@@ -647,20 +632,32 @@ export default function NewProjectWizard() {
                                   onValueChange={field.onChange}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Select role" />
+                                    <SelectValue placeholder="Select profession" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="engineering">
-                                      Engineering
+                                    <SelectItem value="physician">
+                                      Physician
                                     </SelectItem>
-                                    <SelectItem value="design">
-                                      Design
+                                    <SelectItem value="nurse">
+                                      Nurse / NP
                                     </SelectItem>
-                                    <SelectItem value="product">
-                                      Product Management
+                                    <SelectItem value="pharmacist">
+                                      Pharmacist
                                     </SelectItem>
-                                    <SelectItem value="marketing">
-                                      Marketing
+                                    <SelectItem value="administrator">
+                                      Healthcare Administrator
+                                    </SelectItem>
+                                    <SelectItem value="specialist">
+                                      Specialist (HCP)
+                                    </SelectItem>
+                                    <SelectItem value="payer">
+                                      Payer / Managed Care
+                                    </SelectItem>
+                                    <SelectItem value="patient">
+                                      Patient / Caregiver
+                                    </SelectItem>
+                                    <SelectItem value="other">
+                                      Other
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>

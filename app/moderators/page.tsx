@@ -1,9 +1,8 @@
 "use client";
 
-import { Loader2, Plus, Search, Upload } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { BulkUploadDialog } from "@/components/moderators/bulk-upload-dialog";
 import { ModeratorFormDialog } from "@/components/moderators/moderator-form-dialog";
 import { ModeratorsTable } from "@/components/moderators/moderators-table";
 import {
@@ -46,7 +45,6 @@ export default function ModeratorsPage() {
   const [editingModerator, setEditingModerator] = useState<
     Moderator | undefined
   >();
-  const [bulkOpen, setBulkOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Moderator | null>(null);
 
   const fetchModerators = useCallback(async () => {
@@ -63,11 +61,6 @@ export default function ModeratorsPage() {
   useEffect(() => {
     fetchModerators();
   }, [fetchModerators]);
-
-  const handleCreate = () => {
-    setEditingModerator(undefined);
-    setFormOpen(true);
-  };
 
   const handleEdit = (mod: Moderator) => {
     setEditingModerator(mod);
@@ -148,16 +141,7 @@ export default function ModeratorsPage() {
                 Manage moderators and their availability
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={() => setBulkOpen(true)} variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
-                Bulk Upload
-              </Button>
-              <Button onClick={handleCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                New Moderator
-              </Button>
-            </div>
+
           </div>
 
           {/* Filters */}
@@ -204,13 +188,6 @@ export default function ModeratorsPage() {
         onOpenChange={setFormOpen}
         onSuccess={handleFormSuccess}
         open={formOpen}
-      />
-
-      {/* Bulk Upload Dialog */}
-      <BulkUploadDialog
-        onOpenChange={setBulkOpen}
-        onSuccess={fetchModerators}
-        open={bulkOpen}
       />
 
       {/* Delete Confirmation */}

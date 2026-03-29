@@ -135,12 +135,12 @@ export const getColumns = (actions: {
     header: "Progress",
     cell: ({ row }) => {
       const p = row.original;
-      if (p.source !== "qs") {
-        return <span className="text-muted-foreground text-xs">—</span>;
-      }
       const sample = p.sampleSize ?? 0;
       const completed = p.completedCount ?? 0;
       const scheduled = p.scheduledCount ?? 0;
+      if (!sample && !completed && !scheduled) {
+        return <span className="text-muted-foreground text-xs">—</span>;
+      }
       return (
         <div className="flex flex-col text-xs">
           <span>

@@ -10,7 +10,9 @@
     "format": "biome format --write",
     "check": "ultracite check",
     "fix": "ultracite fix",
-    "test:uat": "node --test tests/uat/*.test.mjs"
+    "test:uat": "node --test tests/uat/*.test.mjs",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

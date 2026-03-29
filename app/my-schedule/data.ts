@@ -7,6 +7,7 @@ export interface CalendarEvent {
   moderatorId?: string;
   participant?: string;
   project?: string;
+  projectId?: string;
   start: string; // ISO datetime e.g. "2026-03-12T08:45"
   type: "availability" | "interview";
 }

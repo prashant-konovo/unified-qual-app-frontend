@@ -27,6 +27,7 @@ export interface EnrichedBooking {
   projectName: string;
   rewardPoints: number;
   rewardStatus: string; // "credited" | "not_credited" | ""
+  serviceCategory: string; // "LS" | "MRA"
   slotEnd: string;
   slotId: string;
   slotStart: string;
@@ -81,6 +82,7 @@ function mapEnrichedBooking(raw: any): EnrichedBooking {
     rewardStatus: raw.rewardStatus ?? "",
     meetingLink: raw.meetingLink ?? raw.conferenceHash,
     createdAt: raw.modifiedOn ?? raw.createdAt,
+    serviceCategory: raw.serviceCategory ?? "MRA",
   };
 }
 
@@ -133,5 +135,19 @@ export const bookingsApi = {
     data: { rewardStatus: "credited" | "not_credited"; rewardPoints: number }
   ): Promise<void> => {
     await apiClient.put(`/bookings/${id}/reward`, data);
+  },
+
+  cancelInterview: async (
+    id: string,
+    reason?: string
+  ): Promise<void> => {
+    await apiClient.post(`/interviews/${id}/cancel`, { reason });
+  },
+
+  rescheduleInterview: async (
+    id: string,
+    data: { newStartTime: string; newEndTime: string; reason?: string }
+  ): Promise<void> => {
+    await apiClient.post(`/interviews/${id}/reschedule`, data);
   },
 };

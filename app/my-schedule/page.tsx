@@ -63,6 +63,7 @@ function slotToEvent(slot: Timeslot): CalendarEvent {
     start: slot.start,
     end: slot.end,
     project: slot.project,
+    projectId: slot.projectId,
     participant: slot.participant,
     meetingLink: slot.meetingLink,
   };
@@ -177,6 +178,7 @@ export default function Page() {
           start: ev.start,
           end: ev.end,
           project: ev.project,
+          projectId: ev.projectId,
         });
         setEvents((prev) => [...prev, slotToEvent(slot)]);
         toast.success("Availability saved");

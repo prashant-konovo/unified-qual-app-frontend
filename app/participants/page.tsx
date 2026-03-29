@@ -1,9 +1,8 @@
 "use client";
 
-import { Loader2, Search, UserPlus } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { AddParticipantDialog } from "@/components/participants/add-participant-dialog";
 import type { ParticipantRow } from "@/components/participants/participants-table";
 import { ParticipantsTable } from "@/components/participants/participants-table";
 import {
@@ -38,7 +37,6 @@ export default function ParticipantsPage() {
   const [projectFilter, setProjectFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [projects, setProjects] = useState<ProjectOption[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const fetchParticipants = useCallback(async () => {
     try {
       const result = await participantsApi.getParticipants();
@@ -122,10 +120,7 @@ export default function ParticipantsPage() {
                 View and manage survey respondents and their interview bookings
               </p>
             </div>
-            <Button onClick={() => setDialogOpen(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Participant
-            </Button>
+
           </div>
 
           {/* Filters */}
@@ -178,13 +173,6 @@ export default function ParticipantsPage() {
         </div>
       </main>
 
-      <AddParticipantDialog
-        onOpenChange={setDialogOpen}
-        onSuccess={(created) => {
-          setData((prev) => [created as ParticipantRow, ...prev]);
-        }}
-        open={dialogOpen}
-      />
     </>
   );
 }

@@ -253,10 +253,11 @@ export default function ProjectsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="inquiry">Inquiry</SelectItem>
                   <SelectItem value="defining">Defining</SelectItem>
                   <SelectItem value="in progress">In Progress</SelectItem>
+                  <SelectItem value="finalizing">Finalizing</SelectItem>
                   <SelectItem value="complete">Complete</SelectItem>
-                  <SelectItem value="inquiry">Inquiry</SelectItem>
                   <SelectItem value="paused">Paused</SelectItem>
                 </SelectContent>
               </Select>

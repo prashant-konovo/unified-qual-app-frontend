@@ -5,7 +5,6 @@ import {
   ClipboardListIcon,
   CreditCardIcon,
   FolderIcon,
-  Hourglass,
   MicVocalIcon,
   UserRound,
   UsersIcon,
@@ -77,12 +76,6 @@ const navItems = [
     title: "Participants",
     url: "/participants",
     icon: <UserRound />,
-    allowedRoles: ["admin", "manager"],
-  },
-  {
-    title: "Waiting Queue",
-    url: "/waiting-queue",
-    icon: <Hourglass />,
     allowedRoles: ["admin", "manager"],
   },
 ];
