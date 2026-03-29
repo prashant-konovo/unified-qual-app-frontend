@@ -74,9 +74,10 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                   key={row.id}
                   onClick={() => {
-                    const idStr = (row.original as any).id;
-                    if (idStr) {
-                      router.push(`/projects/${idStr}`);
+                    const orig = row.original as any;
+                    if (orig?.id) {
+                      const sourceParam = orig.source ? `?source=${orig.source}` : "";
+                      router.push(`/projects/${orig.id}${sourceParam}`);
                     }
                   }}
                 >

@@ -4,11 +4,9 @@ import type { ColumnDef } from "@tanstack/react-table";
 import {
   Copy,
   ExternalLink,
-  FileText,
   Folder,
   MoreHorizontal,
   Trash2,
-  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -21,46 +19,82 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { ProjectListItem } from "@/lib/api/projects";
 
-export interface Project {
-  id: string;
-  lastUpdated: string;
-  name: string;
-  owner: string;
-  status: "Draft" | "In Progress" | "Completed" | "Archived";
-  subscriptionId?: string;
-  subscriptionName?: string;
-  surveyId?: string;
-  surveyStatus?: string;
-  surveyTitle?: string;
-  updatedAgo: string;
+// Re-export for page.tsx
+export type { ProjectListItem };
+
+/** Map status string to badge style */
+function statusVariant(
+  status: string
+): "default" | "secondary" | "destructive" | "outline" {
+  const s = status.toLowerCase();
+  if (s === "defining" || s === "draft" || s === "inquiry") return "secondary";
+  if (s === "in progress" || s === "fielding") return "default";
+  if (s === "complete" || s === "completed") return "outline";
+  if (s === "paused" || s === "finalizing") return "destructive";
+  return "default";
+}
+
+function isCompletedStatus(status: string): boolean {
+  const s = status.toLowerCase();
+  return s === "complete" || s === "completed";
+}
+
+/** Human-readable relative time */
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d`;
+  const weeks = Math.floor(days / 7);
+  return `${weeks}w`;
 }
 
 export const getColumns = (actions: {
-  onDuplicate: (project: Project) => void;
-  onDelete: (project: Project) => void;
-}): ColumnDef<Project>[] => [
+  onDuplicate: (project: ProjectListItem) => void;
+  onDelete: (project: ProjectListItem) => void;
+}): ColumnDef<ProjectListItem>[] => [
   {
     accessorKey: "name",
     header: "Project Name",
     cell: ({ row }) => {
-      const project = row.original;
+      const p = row.original;
+      const sourceParam = p.source ? `?source=${p.source}` : "";
       return (
         <div className="flex items-start gap-3">
           <Folder className="mt-0.5 h-5 w-5 text-muted-foreground" />
           <div className="flex flex-col">
             <Link
               className="cursor-pointer font-medium text-foreground hover:underline"
-              href={`/projects/${project.id}`}
+              href={`/projects/${p.id}${sourceParam}`}
               onClick={(e) => e.stopPropagation()}
             >
-              {project.name}
+              {p.name}
             </Link>
             <span className="mt-1 text-muted-foreground text-xs">
-              Updated {project.updatedAgo} ago
+              {p.modifiedAt
+                ? `Updated ${timeAgo(p.modifiedAt)} ago`
+                : `Created ${timeAgo(p.createdAt)} ago`}
             </span>
           </div>
         </div>
+      );
+    },
+  },
+  {
+    accessorKey: "serviceCategory",
+    header: "Type",
+    cell: ({ row }) => {
+      const sc = row.original.serviceCategory;
+      return (
+        <Badge variant={sc === "LS" ? "default" : "secondary"}>
+          {sc}
+        </Badge>
       );
     },
   },
@@ -69,27 +103,15 @@ export const getColumns = (actions: {
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
-      let variant: "default" | "secondary" | "destructive" | "outline" =
-        "default";
-
-      if (status === "Draft") {
-        variant = "secondary";
-      } else if (status === "In Progress") {
-        variant = "default";
-      } else if (status === "Completed") {
-        variant = "outline";
-      } else if (status === "Archived") {
-        variant = "destructive";
-      }
-
+      if (!status) return <span className="text-muted-foreground text-xs">—</span>;
       return (
         <Badge
           className={
-            status === "Completed"
+            isCompletedStatus(status)
               ? "border-green-500 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400"
               : ""
           }
-          variant={variant}
+          variant={statusVariant(status)}
         >
           {status}
         </Badge>
@@ -97,69 +119,60 @@ export const getColumns = (actions: {
     },
   },
   {
-    accessorKey: "owner",
-    header: "Owner",
-  },
-  {
-    accessorKey: "subscriptionName",
-    header: "Subscription",
+    id: "company",
+    header: "Company",
     cell: ({ row }) => {
-      const sub = row.original.subscriptionName;
-      const subId = row.original.subscriptionId;
-      if (!sub) {
+      const p = row.original;
+      const company =
+        p.subscriptionCompany ?? p.clientCompany ?? null;
+      if (!company)
         return <span className="text-muted-foreground text-xs">—</span>;
-      }
-      return subId ? (
-        <Link
-          className="font-medium text-xs hover:underline"
-          href={"/subscriptions"}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {sub}
-        </Link>
-      ) : (
-        <span className="font-medium text-xs">{sub}</span>
-      );
+      return <span className="text-sm">{company}</span>;
     },
   },
   {
-    accessorKey: "surveyTitle",
-    header: "Survey",
+    id: "progress",
+    header: "Progress",
     cell: ({ row }) => {
-      const title = row.original.surveyTitle;
-      const surveyId = row.original.surveyId;
-      const surveyStatus = row.original.surveyStatus;
-      if (!surveyId) {
+      const p = row.original;
+      if (p.source !== "qs") {
         return <span className="text-muted-foreground text-xs">—</span>;
       }
+      const sample = p.sampleSize ?? 0;
+      const completed = p.completedCount ?? 0;
+      const scheduled = p.scheduledCount ?? 0;
       return (
-        <Link
-          className="flex items-center gap-1.5 text-xs hover:underline"
-          href={`/survey-builder?id=${surveyId}`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="font-medium">{title || "Survey"}</span>
-          {surveyStatus === "published" && (
-            <Badge
-              className="ml-1 border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0 text-[10px] text-emerald-600"
-              variant="default"
-            >
-              Published
-            </Badge>
-          )}
-        </Link>
+        <div className="flex flex-col text-xs">
+          <span>
+            {completed}/{sample || "?"} completed
+          </span>
+          <span className="text-muted-foreground">{scheduled} scheduled</span>
+        </div>
       );
     },
   },
   {
-    accessorKey: "lastUpdated",
-    header: "Last Updated",
+    accessorKey: "createdAt",
+    header: "Created",
+    cell: ({ row }) => {
+      const d = row.original.createdAt;
+      if (!d) return "—";
+      return (
+        <span className="text-sm">
+          {new Date(d).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </span>
+      );
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => {
       const project = row.original;
+      const sourceParam = project.source ? `?source=${project.source}` : "";
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -171,7 +184,10 @@ export const getColumns = (actions: {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
-              <Link className="cursor-pointer" href={`/projects/${project.id}`}>
+              <Link
+                className="cursor-pointer"
+                href={`/projects/${project.id}${sourceParam}`}
+              >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Open Project
               </Link>
@@ -183,10 +199,6 @@ export const getColumns = (actions: {
             >
               <Copy className="mr-2 h-4 w-4" />
               Duplicate Project
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Interview Guide
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

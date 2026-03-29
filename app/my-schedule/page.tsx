@@ -117,9 +117,9 @@ export default function Page() {
   useEffect(() => {
     projectsApi
       .getProjectsList()
-      .then((projs: { id?: string; _id?: string; name: string }[]) => {
+      .then((projs) => {
         setProjects(
-          projs.map((p) => ({ id: p.id ?? p._id ?? p.name, name: p.name }))
+          projs.map((p) => ({ id: String(p.id), name: p.name }))
         );
       })
       .catch(() => {

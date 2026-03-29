@@ -238,7 +238,7 @@ export default function NewProjectWizard() {
       };
 
       console.log("Creating Project with payload:", fullPayload);
-      await projectsApi.createProject(fullPayload);
+      await projectsApi.createProject(fullPayload as any);
 
       toast.success("Project created successfully!");
       router.push("/projects");
