@@ -35,25 +35,51 @@ export interface BulkUploadResult {
   failed: number;
 }
 
+// ── Response mapping helpers ──────────────────────────────────────────────────
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function unwrapOne(body: any): any {
+  return body?.data ?? body;
+}
+
+function mapModerator(raw: any): Moderator {
+  return {
+    ...raw,
+    id: raw.id,
+    name:
+      raw.name ??
+      `${raw.firstName ?? ""} ${raw.lastName ?? ""}`.trim() ||
+      "",
+    email: raw.email ?? "",
+    role: raw.role ?? raw.roles?.[0] ?? "moderator",
+    status: raw.status ?? "active",
+    updatedAt: raw.updatedAt ?? raw.modifiedOn,
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+// ── API ──────────────────────────────────────────────────────────────────────
+
 export const moderatorsApi = {
   getModeratorsList: async (status?: string): Promise<Moderator[]> => {
     const params = status ? { status } : {};
     const response = await apiClient.get("/moderators", { params });
     // API returns array directly (not envelope)
-    return Array.isArray(response.data) ? response.data : [];
+    const items = Array.isArray(response.data) ? response.data : [];
+    return items.map(mapModerator);
   },
 
   getModerator: async (id: string | number, source?: string): Promise<Moderator> => {
     const params = source ? { source } : {};
     const response = await apiClient.get(`/moderators/${id}`, { params });
-    return response.data;
+    return mapModerator(response.data);
   },
 
   createModerator: async (
     data: Partial<Moderator>
   ): Promise<Moderator> => {
     const response = await apiClient.post("/moderators", data);
-    return response.data?.data ?? response.data;
+    return mapModerator(unwrapOne(response.data));
   },
 
   updateModerator: async (
@@ -61,7 +87,7 @@ export const moderatorsApi = {
     data: Partial<Moderator>
   ): Promise<Moderator> => {
     const response = await apiClient.put(`/moderators/${id}`, data);
-    return response.data?.data ?? response.data;
+    return mapModerator(unwrapOne(response.data));
   },
 
   deleteModerator: async (id: string | number): Promise<void> => {

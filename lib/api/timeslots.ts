@@ -69,28 +69,87 @@ export interface AISuggestionsResponse {
   suggestions: AISuggestedSlot[];
 }
 
+// ── Response mapping helpers ──────────────────────────────────────────────────
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function unwrapList(body: any): any[] {
+  return Array.isArray(body?.data) ? body.data : Array.isArray(body) ? body : [];
+}
+
+function unwrapOne(body: any): any {
+  return body?.data ?? body;
+}
+
+function mapTimeslot(raw: any): Timeslot {
+  return {
+    id: String(raw.id ?? ""),
+    start: raw.startTime ?? raw.start ?? "",
+    end: raw.endTime ?? raw.end ?? "",
+    moderatorId: String(raw.moderatorId ?? ""),
+    moderatorName: raw.moderatorName ?? "",
+    type:
+      raw.type ??
+      (raw.responderId || raw.responderName ? "interview" : "availability"),
+    projectId: raw.projectId != null ? String(raw.projectId) : undefined,
+    project: raw.projectName ?? raw.project,
+    participant: raw.responderName ?? raw.participant,
+    meetingLink: raw.meetingLink ?? raw.conferenceHash,
+    timezone: raw.timezone,
+    createdAt: raw.createdAt,
+    updatedAt: raw.modifiedOn ?? raw.updatedAt,
+  };
+}
+
+function mapInterviewSlot(raw: any): InterviewSlot {
+  return {
+    id: String(raw.id ?? ""),
+    projectId: String(raw.projectId ?? ""),
+    moderatorId: String(raw.moderatorId ?? ""),
+    moderatorName: raw.moderatorName,
+    start: raw.startTime ?? raw.start ?? "",
+    end: raw.endTime ?? raw.end ?? "",
+    capacity: raw.capacity ?? 1,
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+// ── API ──────────────────────────────────────────────────────────────────────
+
 export const timeslotsApi = {
   getTimeslots: async (params: TimeslotsFilter = {}): Promise<Timeslot[]> => {
     const response = await apiClient.get("/timeslots", { params });
-    return response.data;
+    return unwrapList(response.data).map(mapTimeslot);
   },
 
   createTimeslot: async (data: CreateTimeslotPayload): Promise<Timeslot> => {
-    const response = await apiClient.post("/timeslots", data);
-    return response.data;
+    // Transform FE field names → BE field names
+    const payload = {
+      projectId: data.projectId ? Number(data.projectId) : undefined,
+      startTime: data.start,
+      endTime: data.end,
+      moderatorId: data.moderatorId ? Number(data.moderatorId) : undefined,
+      duration: 15,
+    };
+    const response = await apiClient.post("/timeslots", payload);
+    return mapTimeslot(unwrapOne(response.data));
   },
 
   getTimeslot: async (id: string): Promise<Timeslot> => {
     const response = await apiClient.get(`/timeslots/${id}`);
-    return response.data;
+    return mapTimeslot(unwrapOne(response.data));
   },
 
   updateTimeslot: async (
     id: string,
     data: UpdateTimeslotPayload
   ): Promise<Timeslot> => {
-    const response = await apiClient.put(`/timeslots/${id}`, data);
-    return response.data;
+    // Transform FE field names → BE field names
+    const payload: Record<string, unknown> = {};
+    if (data.start) payload.startTime = data.start;
+    if (data.end) payload.endTime = data.end;
+    if (data.moderatorId) payload.moderatorId = Number(data.moderatorId);
+    const response = await apiClient.put(`/timeslots/${id}`, payload);
+    return mapTimeslot(unwrapOne(response.data));
   },
 
   deleteTimeslot: async (id: string): Promise<void> => {
@@ -105,21 +164,21 @@ export const timeslotsApi = {
       `/moderators/${moderatorId}/timeslots`,
       { params }
     );
-    return response.data;
+    return unwrapList(response.data).map(mapTimeslot);
   },
 
   generateSlots: async (
     payload: GenerateSlotsPayload
   ): Promise<InterviewSlot[]> => {
     const response = await apiClient.post("/slots/generate", payload);
-    return response.data;
+    return unwrapList(response.data).map(mapInterviewSlot);
   },
 
   getAvailableSlots: async (
     params: SlotsFilter = {}
   ): Promise<InterviewSlot[]> => {
     const response = await apiClient.get("/slots", { params });
-    return response.data;
+    return unwrapList(response.data).map(mapInterviewSlot);
   },
 
   getAISuggestions: async (
