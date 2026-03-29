@@ -195,8 +195,8 @@ export default function ProjectsPage() {
             {(
               [
                 { value: "all" as TabValue, label: "All Projects" },
-                { value: "LS" as TabValue, label: "LS (Legacy Scheduler)" },
-                { value: "MRA" as TabValue, label: "MRA (Market Research)" },
+                { value: "LS" as TabValue, label: "LS (Life Sciences)" },
+                { value: "MRA" as TabValue, label: "MRA (Market Research & Analysis)" },
               ] as const
             ).map((tab) => {
               const count =
