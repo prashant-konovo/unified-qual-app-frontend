@@ -113,6 +113,7 @@ function SurveyBuilderInner() {
         // Creating a new survey
         const newSurvey: Survey = {
           id: `survey_draft_${Date.now()}`,
+          title: "",
           projectId: "",
           projectName: "", // User will name it or we can leave blank
           crowdId: "",

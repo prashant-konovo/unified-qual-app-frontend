@@ -39,6 +39,7 @@ export interface Survey {
   questions: SurveyQuestion[];
   rules: ScreeningRule[];
   status: "draft" | "published";
+  title: string;
 }
 
 export const QUESTION_TYPE_META: Record<
