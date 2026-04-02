@@ -27,6 +27,7 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [ssoLoading, setSsoLoading] = useState(false);
+  const [pendingTermsUserId, setPendingTermsUserId] = useState<number | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,11 +35,42 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      await login(email, password, redirectTo);
+      // If terms acceptance is pending, retry with termsAccepted=true
+      await login(email, password, pendingTermsUserId ? true : undefined, redirectTo);
+      setPendingTermsUserId(null);
+    } catch (err: unknown) {
+      // Handle terms acceptance required
+      const termsErr = err as Error & { termsRequired?: boolean; userId?: number };
+      if (termsErr.termsRequired && termsErr.userId) {
+        setPendingTermsUserId(termsErr.userId);
+        setError("Please accept the terms and conditions to continue.");
+        setLoading(false);
+        return;
+      }
+
+      const msg =
+        err instanceof Error ? err.message : "Login failed. Please try again.";
+      const axiosErr = err as { response?: { data?: { message?: string; error?: string; errorMessage?: string } } };
+      setError(
+        axiosErr?.response?.data?.message ??
+          axiosErr?.response?.data?.errorMessage ??
+          axiosErr?.response?.data?.error ??
+          msg,
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleAcceptTerms() {
+    setError("");
+    setLoading(true);
+    try {
+      await login(email, password, true, redirectTo);
+      setPendingTermsUserId(null);
     } catch (err: unknown) {
       const msg =
         err instanceof Error ? err.message : "Login failed. Please try again.";
-      // Surface backend error message if available
       const axiosErr = err as { response?: { data?: { message?: string; error?: string } } };
       setError(
         axiosErr?.response?.data?.message ??
@@ -54,15 +86,22 @@ function LoginForm() {
     setSsoLoading(true);
     setError("");
     try {
-      const res = await apiClient.get("/auth/sso/config");
+      const res = await apiClient.get("/auth/sso/config", {
+        params: {
+          redirectUri: `${window.location.origin}/login/sso-callback`,
+        },
+      });
       const { authorizeUrl } = res.data?.data ?? res.data ?? {};
       if (!authorizeUrl) {
-        setError("SSO is not configured");
+        setError("SSO is not configured for this environment");
         return;
       }
       window.location.href = authorizeUrl;
-    } catch {
-      setError("Failed to initiate SSO login");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } };
+      setError(
+        axiosErr?.response?.data?.error ?? "Failed to initiate SSO login",
+      );
       setSsoLoading(false);
     }
   }
@@ -115,16 +154,34 @@ function LoginForm() {
               <p className="text-sm text-destructive">{error}</p>
             )}
 
-            <Button className="w-full" disabled={loading} type="submit">
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in…
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </Button>
+            {pendingTermsUserId ? (
+              <Button
+                className="w-full"
+                disabled={loading}
+                onClick={handleAcceptTerms}
+                type="button"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Accepting…
+                  </>
+                ) : (
+                  "Accept Terms & Sign in"
+                )}
+              </Button>
+            ) : (
+              <Button className="w-full" disabled={loading} type="submit">
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in…
+                  </>
+                ) : (
+                  "Sign in"
+                )}
+              </Button>
+            )}
           </form>
 
           <div className="relative my-4">

@@ -7,7 +7,7 @@ const apiClient = axios.create({
   },
 });
 
-// Inject auth token into every request
+// Inject auth tokens into every request
 apiClient.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     try {
@@ -16,6 +16,16 @@ apiClient.interceptors.request.use((config) => {
         const tokens = JSON.parse(raw);
         if (tokens?.idToken) {
           config.headers.Authorization = `Bearer ${tokens.idToken}`;
+          // Backward-compat headers for legacy services
+          config.headers["CognitoToken"] = tokens.idToken;
+        }
+      }
+      // Send IC-Auth header for InCrowdAPI backward compat
+      const icRaw = localStorage.getItem("ic_credentials");
+      if (icRaw) {
+        const ic = JSON.parse(icRaw);
+        if (ic?.icUserId && ic?.icAuthToken) {
+          config.headers["IC-Auth"] = `${ic.icUserId}:${ic.icAuthToken}`;
         }
       }
     } catch {
@@ -31,6 +41,8 @@ apiClient.interceptors.response.use(
     // Redirect to login on 401 (expired/invalid token)
     if (error.response?.status === 401 && typeof window !== "undefined") {
       localStorage.removeItem("auth_tokens");
+      localStorage.removeItem("ic_credentials");
+      document.cookie = "auth_active=; path=/; max-age=0";
       window.location.href = "/login";
     }
     console.error("API Error:", error.response?.data || error.message);

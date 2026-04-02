@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Loader2 } from "lucide-react";
@@ -9,17 +9,31 @@ function SSOCallbackContent() {
   const searchParams = useSearchParams();
   const { loginWithCode } = useAuth();
   const [error, setError] = useState("");
+  const processedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent double execution in React StrictMode
+    if (processedRef.current) return;
+
+    // Check for Cognito error in query params
+    const cognitoError = searchParams.get("error");
+    if (cognitoError) {
+      const desc = searchParams.get("error_description") ?? cognitoError;
+      setError(desc);
+      return;
+    }
+
     const code = searchParams.get("code");
     if (!code) {
       setError("Missing authorization code");
       return;
     }
 
+    processedRef.current = true;
     const redirectUri = `${window.location.origin}/login/sso-callback`;
 
     loginWithCode(code, redirectUri).catch((err) => {
+      processedRef.current = false;
       const axiosErr = err as {
         response?: { data?: { error?: string } };
       };
