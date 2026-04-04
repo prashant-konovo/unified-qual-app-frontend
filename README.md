@@ -95,3 +95,22 @@ lib/
   axios.ts         — API client with auth headers + 401 handling
   api/             — Domain API modules (projects, surveys, bookings, etc.)
 ```
+
+## Security Scanning (Snyk)
+
+Snyk runs automatically in the Amplify preBuild phase:
+- **Dependency scan:** `snyk test --severity-threshold=high`
+- **SAST:** `snyk code test`
+- **Monitor:** `snyk monitor` (uploads snapshot to Snyk dashboard)
+
+Currently **non-blocking** (`|| true`). Remove to enforce after baseline is clean.
+
+`SNYK_TOKEN` must be set as an Amplify Console environment variable (App Settings → Environment Variables).
+
+To run locally:
+
+```bash
+export SNYK_TOKEN=<your-token>
+npx snyk test
+npx snyk code test
+```
