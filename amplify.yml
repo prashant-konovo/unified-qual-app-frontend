@@ -5,6 +5,7 @@ frontend:
       commands:
         - npm ci --cache .npm --prefer-offline
         - npm run lint || echo "Lint warnings found (non-blocking)"
+        - npm test
         # Snyk security scanning (non-blocking — remove '|| true' to enforce)
         - npm install -g snyk
         - snyk test --severity-threshold=high || true

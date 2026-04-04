@@ -96,6 +96,27 @@ lib/
   api/             — Domain API modules (projects, surveys, bookings, etc.)
 ```
 
+## Testing
+
+Component tests use **Vitest** + **React Testing Library** (jsdom). 16 tests across 3 files.
+
+```bash
+npm test              # Run all component tests
+npm run test:watch    # Watch mode (re-runs on file change)
+npm run test:e2e      # Run Playwright E2E tests
+```
+
+**Test files:**
+- `components/role-guard.test.tsx` — 6 tests (role rendering, fallback, loading, no user)
+- `components/app-sidebar.test.tsx` — 4 tests (admin/manager/moderator/unauthenticated nav filtering)
+- `app/login/login.test.tsx` — 6 tests (form fields, buttons, title, input types)
+
+**Mocks** (`lib/__mocks__/`):
+- `auth-context.tsx` — Configurable `useAuth()` mock with `setMockUser()`, `setMockIsLoading()`
+- `axios.ts` — Mock API client (prevents real HTTP calls)
+
+Tests run automatically in Amplify CI preBuild phase.
+
 ## Security Scanning (Snyk)
 
 Snyk runs automatically in the Amplify preBuild phase:
