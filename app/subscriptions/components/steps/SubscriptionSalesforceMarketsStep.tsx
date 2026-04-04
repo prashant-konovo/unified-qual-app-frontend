@@ -19,31 +19,38 @@ import {
 
 import { SubscriptionFormValues } from "../types";
 
-export interface ContactsStepProps {
+export interface SubscriptionSalesforceMarketsStepProps {
   form: UseFormReturn<SubscriptionFormValues>;
 }
 
-export function ContactsStep({ form }: ContactsStepProps) {
+export function SubscriptionSalesforceMarketsStep({ form }: SubscriptionSalesforceMarketsStepProps) {
   return (
     <div className="space-y-4">
       <FormField
         control={form.control}
-        name="csUser"
+        name="salesforceAccount"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Managing CS User</FormLabel>
+            <FormLabel>Salesforce Account</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select CS Contact" />
+                  <SelectValue placeholder="Select Salesforce Account" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="sarah">Sarah Jenkins</SelectItem>
-                <SelectItem value="tom">Tom Hanks</SelectItem>
+                <SelectItem value="sf_acme">
+                  Acme Global (001xxxxxxx1)
+                </SelectItem>
+                <SelectItem value="sf_globex">
+                  Globex EU (001xxxxxxx2)
+                </SelectItem>
+                <SelectItem value="sf_initech">
+                  Initech LLC (001xxxxxxx3)
+                </SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -52,22 +59,23 @@ export function ContactsStep({ form }: ContactsStepProps) {
       />
       <FormField
         control={form.control}
-        name="salesContact"
+        name="markets"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Sales Contact</FormLabel>
+            <FormLabel>Markets</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Sales Contact" />
+                  <SelectValue placeholder="Select Market" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="mike">Mike Ross</SelectItem>
-                <SelectItem value="jane">Jane Doe</SelectItem>
+                <SelectItem value="us">United States</SelectItem>
+                <SelectItem value="eu">Europe</SelectItem>
+                <SelectItem value="global">Global</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -76,22 +84,27 @@ export function ContactsStep({ form }: ContactsStepProps) {
       />
       <FormField
         control={form.control}
-        name="pmContact"
+        name="panels"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>PM Contact</FormLabel>
+            <FormLabel>Panels</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select PM Contact" />
+                  <SelectValue placeholder="Select Panel" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="alex">Alex Vance</SelectItem>
-                <SelectItem value="chris">Chris Evans</SelectItem>
+                <SelectItem value="tech">
+                  Healthcare & Tech
+                </SelectItem>
+                <SelectItem value="finance">Finance</SelectItem>
+                <SelectItem value="consumer">
+                  Consumer Electronics
+                </SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />

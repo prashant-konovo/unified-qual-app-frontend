@@ -3,8 +3,8 @@
 import { Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ModeratorFormDialog } from "@/components/moderators/moderator-form-dialog";
-import { ModeratorsTable } from "@/components/moderators/moderators-table";
+import { ModeratorFormDialog } from "@/app/moderators/components/moderator-form-dialog";
+import { ModeratorsTable } from "@/app/moderators/components/moderators-table";
 import {
   AlertDialog,
   AlertDialogAction,

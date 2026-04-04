@@ -1,3 +1,4 @@
+// E2E tests planned — test directory: e2e/
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({

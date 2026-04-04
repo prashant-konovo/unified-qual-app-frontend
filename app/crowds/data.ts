@@ -1,3 +1,4 @@
+// TODO: Replace mock data with API integration — see lib/api/*.ts
 export interface CrowdAttribute {
   choices: string[];
   id: string;

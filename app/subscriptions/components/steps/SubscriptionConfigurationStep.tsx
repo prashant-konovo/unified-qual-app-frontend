@@ -21,12 +21,12 @@ import {
 
 import { SubscriptionFormValues } from "../types";
 
-export interface ConfigurationStepProps {
+export interface SubscriptionConfigurationStepProps {
   form: UseFormReturn<SubscriptionFormValues>;
   availableProjects: any[];
 }
 
-export function ConfigurationStep({ form, availableProjects }: ConfigurationStepProps) {
+export function SubscriptionConfigurationStep({ form, availableProjects }: SubscriptionConfigurationStepProps) {
   return (
     <div className="space-y-4">
       <FormField

@@ -19,11 +19,11 @@ import {
 
 import { CrowdFormValues } from "../types";
 
-export interface TargetingStepProps {
+export interface CrowdTargetingStepProps {
   form: UseFormReturn<CrowdFormValues>;
 }
 
-export function TargetingStep({ form }: TargetingStepProps) {
+export function CrowdTargetingStep({ form }: CrowdTargetingStepProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">

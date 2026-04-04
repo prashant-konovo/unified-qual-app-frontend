@@ -20,8 +20,8 @@ import { Stepper } from "@/components/ui/stepper";
 
 import {
   CrowdBasicInfoStep,
-  TargetingStep,
-  AttributesStep,
+  CrowdTargetingStep,
+  CrowdAttributesStep,
   CrowdReviewStep,
 } from "./steps";
 import { crowdFormSchema, CrowdFormValues } from "./types";
@@ -126,10 +126,10 @@ export function CreateCrowdWizard() {
                 <CrowdBasicInfoStep form={form} />
               </div>
               <div className={currentStep !== 1 ? "hidden" : ""}>
-                <TargetingStep form={form} />
+                <CrowdTargetingStep form={form} />
               </div>
               <div className={currentStep !== 2 ? "hidden" : ""}>
-                <AttributesStep fieldArray={fieldArray} form={form} />
+                <CrowdAttributesStep fieldArray={fieldArray} form={form} />
               </div>
               <div className={currentStep !== 3 ? "hidden" : ""}>
                 <CrowdReviewStep form={form} />

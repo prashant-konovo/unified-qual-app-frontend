@@ -1,3 +1,4 @@
+// TODO: Replace mock data with API integration — see lib/api/*.ts
 import type { Survey } from "./types";
 
 export const MOCK_SURVEY: Survey = {

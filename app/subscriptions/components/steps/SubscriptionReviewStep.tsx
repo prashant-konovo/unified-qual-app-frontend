@@ -4,11 +4,11 @@ import { UseFormReturn } from "react-hook-form";
 
 import { SubscriptionFormValues } from "../types";
 
-export interface ReviewStepProps {
+export interface SubscriptionReviewStepProps {
   form: UseFormReturn<SubscriptionFormValues>;
 }
 
-export function ReviewStep({ form }: ReviewStepProps) {
+export function SubscriptionReviewStep({ form }: SubscriptionReviewStepProps) {
   return (
     <div className="space-y-4">
       <h4 className="px-2 font-semibold">Summary</h4>

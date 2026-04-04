@@ -22,11 +22,11 @@ import { projectsApi } from "@/lib/api/projects";
 import { subscriptionsApi } from "@/lib/api/subscriptions";
 
 import {
-  BasicInfoStep,
-  SalesforceMarketsStep,
-  ContactsStep,
-  ConfigurationStep,
-  ReviewStep,
+  SubscriptionBasicInfoStep,
+  SubscriptionSalesforceMarketsStep,
+  SubscriptionContactsStep,
+  SubscriptionConfigurationStep,
+  SubscriptionReviewStep,
 } from "./steps";
 import { subscriptionFormSchema, SubscriptionFormValues } from "./types";
 
@@ -153,19 +153,19 @@ export function CreateSubscriptionWizard() {
           >
             <div className="min-h-[200px] flex-1 overflow-y-auto pr-1">
               <div className={currentStep !== 0 ? "hidden" : ""}>
-                <BasicInfoStep form={form} />
+                <SubscriptionBasicInfoStep form={form} />
               </div>
               <div className={currentStep !== 1 ? "hidden" : ""}>
-                <SalesforceMarketsStep form={form} />
+                <SubscriptionSalesforceMarketsStep form={form} />
               </div>
               <div className={currentStep !== 2 ? "hidden" : ""}>
-                <ContactsStep form={form} />
+                <SubscriptionContactsStep form={form} />
               </div>
               <div className={currentStep !== 3 ? "hidden" : ""}>
-                <ConfigurationStep availableProjects={availableProjects} form={form} />
+                <SubscriptionConfigurationStep availableProjects={availableProjects} form={form} />
               </div>
               <div className={currentStep !== 4 ? "hidden" : ""}>
-                <ReviewStep form={form} />
+                <SubscriptionReviewStep form={form} />
               </div>
             </div>
 

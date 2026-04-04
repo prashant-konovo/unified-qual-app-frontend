@@ -3,9 +3,9 @@
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Subscription } from "@/app/subscriptions/data";
-import { CreateSubscriptionWizard } from "@/components/subscriptions/create-subscription-wizard";
-import { FiltersBar } from "@/components/subscriptions/filters-bar";
-import { SubscriptionsTable } from "@/components/subscriptions/subscriptions-table";
+import { CreateSubscriptionWizard } from "@/app/subscriptions/components/create-subscription-wizard";
+import { FiltersBar } from "@/app/subscriptions/components/filters-bar";
+import { SubscriptionsTable } from "@/app/subscriptions/components/subscriptions-table";
 import {
   Breadcrumb,
   BreadcrumbItem,

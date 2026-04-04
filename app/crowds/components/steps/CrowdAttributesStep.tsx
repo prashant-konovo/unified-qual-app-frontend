@@ -15,12 +15,12 @@ import { Input } from "@/components/ui/input";
 
 import { CrowdFormValues } from "../types";
 
-export interface AttributesStepProps {
+export interface CrowdAttributesStepProps {
   form: UseFormReturn<CrowdFormValues>;
   fieldArray: UseFieldArrayReturn<CrowdFormValues, "attributes", "id">;
 }
 
-export function AttributesStep({ form, fieldArray }: AttributesStepProps) {
+export function CrowdAttributesStep({ form, fieldArray }: CrowdAttributesStepProps) {
   const { fields, append, remove } = fieldArray;
 
   return (

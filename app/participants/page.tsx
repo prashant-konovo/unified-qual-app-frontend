@@ -3,8 +3,8 @@
 import { Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { ParticipantRow } from "@/components/participants/participants-table";
-import { ParticipantsTable } from "@/components/participants/participants-table";
+import type { ParticipantRow } from "@/app/participants/components/participants-table";
+import { ParticipantsTable } from "@/app/participants/components/participants-table";
 import {
   Breadcrumb,
   BreadcrumbItem,

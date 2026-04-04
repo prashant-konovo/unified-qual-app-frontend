@@ -20,11 +20,11 @@ import {
 
 import { SubscriptionFormValues } from "../types";
 
-export interface BasicInfoStepProps {
+export interface SubscriptionBasicInfoStepProps {
   form: UseFormReturn<SubscriptionFormValues>;
 }
 
-export function BasicInfoStep({ form }: BasicInfoStepProps) {
+export function SubscriptionBasicInfoStep({ form }: SubscriptionBasicInfoStepProps) {
   return (
     <div className="space-y-4">
       <FormField
