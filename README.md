@@ -98,24 +98,61 @@ lib/
 
 ## Testing
 
-Component tests use **Vitest** + **React Testing Library** (jsdom). 16 tests across 3 files.
+### Component Tests (16 tests, Vitest + React Testing Library)
 
+Component tests use **Vitest** + **React Testing Library** with jsdom environment.
+
+**Run all component tests:**
 ```bash
-npm test              # Run all component tests
-npm run test:watch    # Watch mode (re-runs on file change)
-npm run test:e2e      # Run Playwright E2E tests
+# Step 1: Run all tests (single run)
+npm test
+
+# Step 2 (optional): Run in watch mode (re-runs on file change)
+npm run test:watch
+```
+
+**Run a specific test file:**
+```bash
+npx vitest run components/role-guard.test.tsx
+npx vitest run app/login/login.test.tsx
 ```
 
 **Test files:**
-- `components/role-guard.test.tsx` — 6 tests (role rendering, fallback, loading, no user)
-- `components/app-sidebar.test.tsx` — 4 tests (admin/manager/moderator/unauthenticated nav filtering)
-- `app/login/login.test.tsx` — 6 tests (form fields, buttons, title, input types)
+| File | Tests | What it covers |
+|------|-------|----------------|
+| `components/role-guard.test.tsx` | 6 | Role rendering, fallback, loading state, no user |
+| `components/app-sidebar.test.tsx` | 4 | Admin/manager/moderator/unauthenticated nav filtering |
+| `app/login/login.test.tsx` | 6 | Form fields, buttons, heading, input types |
+
+### Writing New Tests
+
+1. Create a `*.test.tsx` file next to the component
+2. Mock auth context at the top of your test file:
+   ```tsx
+   import { vi } from "vitest";
+   import { setMockUser, resetMockAuth, mockAdminUser } from "@/lib/__mocks__/auth-context";
+   vi.mock("@/lib/auth-context", () => import("@/lib/__mocks__/auth-context"));
+   ```
+3. Use `setMockUser()` to configure the auth state per test
+4. Use `resetMockAuth()` in `beforeEach` to reset between tests
+
+**Available mock users:** `mockAdminUser`, `mockManagerUser`, `mockModeratorUser`
 
 **Mocks** (`lib/__mocks__/`):
 - `auth-context.tsx` — Configurable `useAuth()` mock with `setMockUser()`, `setMockIsLoading()`
 - `axios.ts` — Mock API client (prevents real HTTP calls)
 
-Tests run automatically in Amplify CI preBuild phase.
+### E2E Tests (Playwright)
+
+```bash
+# Step 1: Run Playwright E2E tests against data-qa
+npm run test:e2e
+
+# Step 2 (optional): Run with UI mode
+npm run test:e2e:ui
+```
+
+Tests run automatically in Amplify CI preBuild phase (`npm test`).
 
 ## Security Scanning (Snyk)
 
