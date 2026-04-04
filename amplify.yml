@@ -7,7 +7,6 @@ frontend:
         - npm run lint || echo "Lint warnings found (non-blocking)"
         # Snyk security scanning (non-blocking — remove '|| true' to enforce)
         - npm install -g snyk
-        - snyk auth $SNYK_TOKEN
         - snyk test --severity-threshold=high || true
         - snyk code test || true
         - snyk monitor || true
