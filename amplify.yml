@@ -35,14 +35,18 @@ frontend:
         # To block deploy on failure: remove '|| true' from the curl command
         # ──────────────────────────────────────────────────────────────────────
         # - |
-        #   echo "Triggering SDET Qual Test Suite..."
-        #   curl -sf -X POST \
-        #     -H "Accept: application/vnd.github.v3+json" \
-        #     -H "Authorization: token $GH_PAT" \
-        #     "https://api.github.com/repos/${SDET_TEST_REPO}/dispatches" \
-        #     -d "{\"event_type\":\"qual-frontend-deploy\",\"client_payload\":{\"branch\":\"$AWS_BRANCH\",\"commit\":\"$AWS_COMMIT_ID\",\"app_id\":\"$AWS_APP_ID\",\"env\":\"qa\"}}" \
-        #     || true
-        #   echo "SDET test suite triggered (run is async — check $SDET_TEST_REPO for results)"
+        #   if [ "$AWS_BRANCH" = "data-qa" ]; then
+        #     echo "Triggering SDET Qual Test Suite..."
+        #     curl -sf -X POST \
+        #       -H "Accept: application/vnd.github.v3+json" \
+        #       -H "Authorization: token $GH_PAT" \
+        #       "https://api.github.com/repos/${SDET_TEST_REPO}/dispatches" \
+        #       -d "{\"event_type\":\"qual-frontend-deploy\",\"client_payload\":{\"branch\":\"$AWS_BRANCH\",\"commit\":\"$AWS_COMMIT_ID\",\"app_id\":\"$AWS_APP_ID\",\"env\":\"qa\"}}" \
+        #       || true
+        #     echo "SDET test suite triggered (run is async — check $SDET_TEST_REPO for results)"
+        #   else
+        #     echo "Skipping SDET test suite (branch=$AWS_BRANCH, only runs on data-qa)"
+        #   fi
     build:
       commands:
         - env | grep -e NEXT_PUBLIC_ >> .env.production
