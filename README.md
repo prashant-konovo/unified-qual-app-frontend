@@ -142,17 +142,63 @@ npx vitest run app/login/login.test.tsx
 - `auth-context.tsx` — Configurable `useAuth()` mock with `setMockUser()`, `setMockIsLoading()`
 - `axios.ts` — Mock API client (prevents real HTTP calls)
 
-### E2E Tests (Playwright)
+### E2E Tests (17 tests, Playwright)
 
+End-to-end tests run against the deployed QA environment using [Playwright](https://playwright.dev/).
+
+**Prerequisites:**
 ```bash
-# Step 1: Run Playwright E2E tests against data-qa
+# Install Playwright browsers (one-time)
+npx playwright install chromium --with-deps
+```
+
+**Run all E2E tests:**
+```bash
+# Step 1: Set credentials for authenticated tests
+export E2E_USER_EMAIL="your-email@konovo.com"
+export E2E_USER_PASSWORD="your-password"
+
+# Step 2: Run all tests
 npm run test:e2e
 
-# Step 2 (optional): Run with UI mode
+# Step 3 (optional): Run in interactive UI mode
 npm run test:e2e:ui
 ```
 
-Tests run automatically in Amplify CI preBuild phase (`npm test`).
+**Run unauthenticated tests only (no credentials needed):**
+```bash
+npx playwright test --project=unauthenticated
+```
+
+**Run a specific test file:**
+```bash
+npx playwright test e2e/login.spec.ts
+npx playwright test e2e/navigation.spec.ts
+```
+
+**Test files:**
+| File | Tests | What it covers |
+|------|-------|----------------|
+| `e2e/auth.setup.ts` | 1 | Login + save browser storage state for authenticated tests |
+| `e2e/login.spec.ts` | 7 | Form rendering, field validation, logo, error handling, loading state, redirect |
+| `e2e/navigation.spec.ts` | 6 | Unauthenticated redirect (3), sidebar nav, page transitions, root redirect |
+| `e2e/projects.spec.ts` | 4 | Project list, LS/MRA brand tabs, create navigation, detail navigation |
+
+**Playwright projects:**
+| Project | Auth | Description |
+|---------|------|-------------|
+| `setup` | — | Runs `auth.setup.ts` to log in and save `e2e/.auth/user.json` |
+| `chromium` | ✅ | Authenticated tests using saved storage state (depends on setup) |
+| `unauthenticated` | ❌ | Tests that verify behavior without login |
+
+**Environment variables:**
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `E2E_USER_EMAIL` | For auth tests | Login email for QA environment |
+| `E2E_USER_PASSWORD` | For auth tests | Login password for QA environment |
+| `E2E_BASE_URL` | No | Override base URL (default: `https://data-qa.d2ejnrofktz23t.amplifyapp.com`) |
+
+**CI:** E2E tests run in Amplify preBuild phase (non-blocking). Unauthenticated tests always run. Authenticated tests run when `E2E_USER_EMAIL` + `E2E_USER_PASSWORD` env vars are set in Amplify Console.
 
 ## Security Scanning (Snyk)
 
