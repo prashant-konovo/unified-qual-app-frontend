@@ -7,7 +7,7 @@ frontend:
         - npm run lint || echo "Lint warnings found (non-blocking)"
         - npm test
         # E2E tests against deployed QA (non-blocking — remove '|| true' to enforce)
-        - npx playwright install chromium --with-deps
+        - npx playwright install chromium --with-deps || echo "Playwright browser install failed (non-blocking)"
         - npx playwright test --project=unauthenticated || true
         - |
           if [ -n "$E2E_USER_EMAIL" ] && [ -n "$E2E_USER_PASSWORD" ]; then
