@@ -10,6 +10,18 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.tsx"],
     include: ["**/*.test.{ts,tsx}"],
     css: false,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary"],
+      include: ["app/**", "components/**", "lib/**"],
+      exclude: ["**/__mocks__/**", "**/*.test.{ts,tsx}"],
+      thresholds: {
+        lines: 5,
+        functions: 5,
+        branches: 5,
+        statements: 5,
+      },
+    },
   },
   resolve: {
     alias: {
