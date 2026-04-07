@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/backend/:path*",
+        source: "/api/:path*",
         destination: `${process.env.BACKEND_URL ?? "http://a6e1211d45bda4b32b51f6b2d278bce7-1983641930.us-east-2.elb.amazonaws.com"}/v1/:path*`,
       },
     ];

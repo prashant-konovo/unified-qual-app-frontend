@@ -27,7 +27,7 @@ npm install
 BACKEND_URL=http://localhost:8080
 ```
 
-This tells Next.js to proxy `/api/backend/*` requests to the local Go backend instead of the EKS load balancer.
+This tells Next.js to proxy `/api/*` requests to the local Go backend instead of the EKS load balancer.
 
 ### 3. Start Dev Server
 
@@ -42,13 +42,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### How API Proxying Works
 
 ```
-Browser → localhost:3000/api/backend/projects
+Browser → localhost:3000/api/projects
   → Next.js rewrite (next.config.ts)
     → BACKEND_URL/v1/projects
       → localhost:8080/v1/projects (local Go backend)
 ```
 
-- `next.config.ts` has a rewrite rule: `/api/backend/:path*` → `${BACKEND_URL}/v1/:path*`
+- `next.config.ts` has a rewrite rule: `/api/:path*` → `${BACKEND_URL}/v1/:path*`
 - If `BACKEND_URL` is not set, falls back to the EKS load balancer URL
 - This avoids mixed-content issues (HTTPS frontend → HTTP backend)
 

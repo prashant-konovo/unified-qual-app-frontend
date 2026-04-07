@@ -11,7 +11,7 @@ const apiClient = {
     response: { use: vi.fn(), eject: vi.fn() },
   },
   defaults: {
-    baseURL: "/api/backend",
+    baseURL: "/api",
     headers: { common: {} },
   },
 };
