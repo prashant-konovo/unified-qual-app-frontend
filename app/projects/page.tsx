@@ -1,8 +1,8 @@
 "use client";
 
-import { Plus, Search } from "lucide-react";
+import { Loader2, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,118 +20,71 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { projectsApi } from "@/lib/api/projects";
-import { getColumns, type Project } from "./columns";
+import {
+  projectsApi,
+  type ProjectListItem,
+  type ServiceCategory,
+} from "@/lib/api/projects";
+import { getColumns } from "./columns";
 import { DataTable } from "./data-table";
 
-// Generate 25 mock projects
-const generateMockProjects = (): Project[] => {
-  const statuses = ["Draft", "In Progress", "Completed", "Archived"] as const;
-  const owners = [
-    "Sarah Jenkins",
-    "Alex Rivera",
-    "Michael Chang",
-    "Pramod Ukkali",
-    "Jessica Lee",
-    "David Kim",
-  ];
-  const names = [
-    "Customer Onboarding Redesign",
-    "Q1 Marketing Campaign",
-    "Platform Security Audit",
-    "Legacy API Deprecation",
-    "User Research Survey",
-    "Dashboard Analytics Update",
-    "Mobile App Prototype",
-    "Email Templates Revamp",
-    "Checkout Flow Optimization",
-    "Q2 Strategy Planning",
-    "Internal Tools Dashboard",
-    "Dark Mode Implementation",
-    "Data Privacy Compliance",
-    "Feedback Form Updates",
-  ];
-  const dates = [
-    "Mar 12, 2026",
-    "Mar 10, 2026",
-    "Mar 5, 2026",
-    "Feb 28, 2026",
-    "Feb 15, 2026",
-    "Jan 10, 2026",
-  ];
-
-  return Array.from({ length: 25 }).map((_, i) => {
-    return {
-      id: `proj-${i + 1}`,
-      name: `${names[i % names.length]} ${Math.floor(i / names.length) > 0 ? `v${Math.floor(i / names.length) + 1}` : ""}`.trim(),
-      status: statuses[i % statuses.length],
-      owner: owners[i % owners.length],
-      lastUpdated: dates[i % dates.length],
-      updatedAgo: `${(i % 5) + 1}${i % 2 === 0 ? "d" : "w"}`,
-    };
-  });
-};
-
-const initialMockData = generateMockProjects();
+type TabValue = "all" | "LS" | "MRA";
 
 export default function ProjectsPage() {
-  const [data, setData] = useState<Project[]>(initialMockData);
+  const [data, setData] = useState<ProjectListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [sort, setSort] = useState("modified");
+  const [activeTab, setActiveTab] = useState<TabValue>("all");
 
-  // Fetch from API on mount
-  useEffect(() => {
-    async function fetchProjects() {
-      try {
-        const apiData = await projectsApi.getProjectsList();
-        if (Array.isArray(apiData)) {
-          setData(apiData);
-        } else {
-          console.warn(
-            "API returned non-array (likely a stub), falling back to mock data."
-          );
-        }
-      } catch (error) {
-        console.error("Using mock data. API fetch failed:", error);
+  const fetchProjects = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params: Record<string, string> = {};
+      if (activeTab !== "all") {
+        params.serviceCategory = activeTab;
       }
+      const apiData = await projectsApi.getProjectsList(params);
+      setData(apiData);
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+      setData([]);
+    } finally {
+      setIsLoading(false);
     }
+  }, [activeTab]);
+
+  useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [fetchProjects]);
 
-  // Action Handlers
-  const handleDuplicate = async (project: Project) => {
-    try {
-      await projectsApi.createProject({
-        name: `${project.name} (Copy)`,
-        owner: project.owner,
-        status: "Draft",
-      });
-    } catch (error) {
-      console.error("Failed to create project via API:", error);
-    }
+  const handleDuplicate = useCallback(
+    async (project: ProjectListItem) => {
+      try {
+        await projectsApi.createProject({
+          name: `${project.name} (Copy)`,
+          source: project.source,
+        });
+        fetchProjects();
+      } catch (error) {
+        console.error("Failed to duplicate project:", error);
+      }
+    },
+    [fetchProjects]
+  );
 
-    // Optimistic local update
-    const newProject: Project = {
-      ...project,
-      id: `proj-${Date.now()}`,
-      name: `${project.name} (Copy)`,
-      lastUpdated: "Just now",
-      updatedAgo: "0m",
-    };
-    setData((prev) => [newProject, ...prev]);
-  };
-
-  const handleDelete = async (project: Project) => {
-    try {
-      await projectsApi.deleteProject(project.id);
-    } catch (error) {
-      console.error("Failed to delete project via API:", error);
-    }
-
-    // Optimistic local update
-    setData((prev) => prev.filter((p) => p.id !== project.id));
-  };
+  const handleDelete = useCallback(
+    async (project: ProjectListItem) => {
+      try {
+        await projectsApi.deleteProject(project.id);
+        setData((prev) => prev.filter((p) => p.id !== project.id));
+      } catch (error) {
+        console.error("Failed to delete project:", error);
+      }
+    },
+    []
+  );
 
   // Derived filtered & sorted data
   const filteredData = useMemo(() => {
@@ -142,49 +95,57 @@ export default function ProjectsPage() {
       const q = search.toLowerCase();
       result = result.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) || p.owner.toLowerCase().includes(q)
+          p.name.toLowerCase().includes(q) ||
+          (p.subscriptionCompany ?? "").toLowerCase().includes(q) ||
+          (p.clientCompany ?? "").toLowerCase().includes(q)
       );
     }
 
-    // Status
-    if (status !== "all") {
-      const normalizedStatus = status.toLowerCase().replace("-", " ");
+    // Status filter
+    if (statusFilter !== "all") {
+      const normalized = statusFilter.toLowerCase();
       result = result.filter(
-        (p) => p.status.toLowerCase() === normalizedStatus
+        (p) => (p.status ?? "").toLowerCase() === normalized
       );
     }
 
     // Sort
     result.sort((a, b) => {
-      if (sort === "name") {
-        return a.name.localeCompare(b.name);
-      }
+      if (sort === "name") return a.name.localeCompare(b.name);
       if (sort === "modified") {
-        // Approximate mock sorting based on string dates
-        return (
-          new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
-        );
+        const aDate = a.modifiedAt ?? a.createdAt ?? "";
+        const bDate = b.modifiedAt ?? b.createdAt ?? "";
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
       }
       if (sort === "created") {
-        // Fallback to numeric id parsing assumption
-        const aVal = Number.parseInt(a.id.replace(/\D/g, "") || "0");
-        const bVal = Number.parseInt(b.id.replace(/\D/g, "") || "0");
-        return aVal - bVal;
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       }
       return 0;
     });
 
     return result;
-  }, [data, search, status, sort]);
+  }, [data, search, statusFilter, sort]);
 
-  // Get columns initialized with our action callbacks
   const columns = useMemo(
     () =>
       getColumns({
         onDuplicate: handleDuplicate,
         onDelete: handleDelete,
       }),
-    []
+    [handleDelete, handleDuplicate]
+  );
+
+  // Counts per tab
+  const allCount = data.length;
+  const lsCounts = useMemo(
+    () => data.filter((p) => p.serviceCategory === "LS").length,
+    [data]
+  );
+  const mraCounts = useMemo(
+    () => data.filter((p) => p.serviceCategory === "MRA").length,
+    [data]
   );
 
   return (
@@ -207,7 +168,7 @@ export default function ProjectsPage() {
 
       <main className="flex-1 overflow-auto bg-zinc-50/50 p-4 md:p-8 dark:bg-zinc-950/20">
         <div className="mx-auto max-w-7xl space-y-6">
-          {/* Page Header Area */}
+          {/* Page Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="font-bold text-3xl text-foreground tracking-tight">
@@ -229,6 +190,50 @@ export default function ProjectsPage() {
             </Button>
           </div>
 
+          {/* Service Category Tabs (LS / MRA) */}
+          <div className="flex gap-1 rounded-lg border border-zinc-200/60 bg-card p-1 shadow-sm dark:border-zinc-800/60">
+            {(
+              [
+                { value: "all" as TabValue, label: "All Projects" },
+                { value: "LS" as TabValue, label: "LS (Life Sciences)" },
+                { value: "MRA" as TabValue, label: "MRA (Market Research & Analysis)" },
+              ] as const
+            ).map((tab) => {
+              const count =
+                tab.value === "all"
+                  ? allCount
+                  : tab.value === "LS"
+                    ? lsCounts
+                    : mraCounts;
+              const isActive = activeTab === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                  onClick={() => setActiveTab(tab.value)}
+                >
+                  {tab.label}
+                  {!isLoading && (
+                    <span
+                      className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs ${
+                        isActive
+                          ? "bg-primary-foreground/20 text-primary-foreground"
+                          : "bg-muted-foreground/10 text-muted-foreground"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Filters Section */}
           <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-200/60 bg-card p-4 shadow-sm sm:flex-row sm:items-center dark:border-zinc-800/60">
             <div className="flex flex-1 flex-col items-start gap-4 sm:flex-row sm:items-center">
@@ -242,16 +247,18 @@ export default function ProjectsPage() {
                   value={search}
                 />
               </div>
-              <Select onValueChange={setStatus} value={status}>
+              <Select onValueChange={setStatusFilter} value={statusFilter}>
                 <SelectTrigger className="w-full bg-background/50 transition-colors hover:bg-background sm:w-[180px]">
                   <SelectValue placeholder="Status Filter" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
+                  <SelectItem value="inquiry">Inquiry</SelectItem>
+                  <SelectItem value="defining">Defining</SelectItem>
+                  <SelectItem value="in progress">In Progress</SelectItem>
+                  <SelectItem value="finalizing">Finalizing</SelectItem>
+                  <SelectItem value="complete">Complete</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -275,7 +282,13 @@ export default function ProjectsPage() {
 
           {/* Data Table */}
           <div className="fade-in slide-in-from-bottom-4 animate-in duration-500 will-change-transform">
-            <DataTable columns={columns} data={filteredData} />
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <DataTable columns={columns} data={filteredData} />
+            )}
           </div>
         </div>
       </main>

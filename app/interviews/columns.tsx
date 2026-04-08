@@ -2,6 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import {
+  Ban,
+  CalendarClock,
   CheckCircle,
   Edit3,
   Link,
@@ -23,8 +25,10 @@ import {
 import type { Interview } from "./data";
 
 interface ColumnCallbacks {
+  onCancelInterview: (id: string) => void;
   onCreditRewards: (interview: Interview) => void;
   onInvalidate: (id: string) => void;
+  onRescheduleInterview: (interview: Interview) => void;
 }
 
 export function createColumns(
@@ -72,6 +76,25 @@ export function createColumns(
               </span>
             </div>
           </div>
+        );
+      },
+    },
+    {
+      accessorKey: "serviceCategory",
+      header: "Brand",
+      cell: ({ row }) => {
+        const sc = row.getValue("serviceCategory") as string;
+        return (
+          <Badge
+            className={
+              sc === "LS"
+                ? "border-violet-200 bg-violet-50 text-violet-700"
+                : "border-sky-200 bg-sky-50 text-sky-700"
+            }
+            variant="outline"
+          >
+            {sc === "LS" ? "LS" : "MRA"}
+          </Badge>
         );
       },
     },
@@ -184,6 +207,19 @@ export function createColumns(
                   >
                     <UserX className="mr-2 h-4 w-4" />
                     <span>Invalidate Interview</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => callbacks.onCancelInterview(interview.id)}
+                  >
+                    <Ban className="mr-2 h-4 w-4" />
+                    <span>Cancel Interview</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => callbacks.onRescheduleInterview(interview)}
+                  >
+                    <CalendarClock className="mr-2 h-4 w-4" />
+                    <span>Reschedule</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>

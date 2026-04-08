@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button";
 import type { SurveyQuestion } from "../types";
 import { QuestionCard } from "./QuestionCard";
 
-type Props = {
-  questions: SurveyQuestion[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  onReorder: (questions: SurveyQuestion[]) => void;
+interface Props {
+  onAddQuestion: () => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
-  onAddQuestion: () => void;
-};
+  onReorder: (questions: SurveyQuestion[]) => void;
+  onSelect: (id: string) => void;
+  questions: SurveyQuestion[];
+  selectedId: string | null;
+}
 
 export function QuestionList({
   questions,

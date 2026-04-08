@@ -1,0 +1,62 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --cache .npm --prefer-offline
+        - npm run lint || echo "Lint warnings found (non-blocking)"
+        - npm test
+        # E2E tests against deployed QA (non-blocking — remove '|| true' to enforce)
+        - npx playwright install chromium --with-deps || echo "Playwright browser install failed (non-blocking)"
+        - npx playwright test --project=unauthenticated || true
+        - |
+          if [ -n "$E2E_USER_EMAIL" ] && [ -n "$E2E_USER_PASSWORD" ]; then
+            npx playwright test --project=setup --project=chromium || true
+          else
+            echo "Skipping authenticated E2E tests (E2E_USER_EMAIL/E2E_USER_PASSWORD not set)"
+          fi
+        # Snyk security scanning (non-blocking — remove '|| true' to enforce)
+        - npm install -g snyk
+        - snyk test --severity-threshold=high || true
+        - snyk code test || true
+        - snyk monitor || true
+        # ──────────────────────────────────────────────────────────────────────
+        # SDET Qual Test Suite — Trigger external test pipeline via GitHub API
+        # Dispatches a workflow in the SDET-managed repo to run the full
+        # Qual regression / smoke test suite against the deployed environment.
+        #
+        # Prerequisites:
+        #   1. Set SDET_TEST_REPO env var (e.g. "InCrowd/qual-test-suite")
+        #   2. Set GH_PAT env var (GitHub PAT with repo/workflow scope)
+        #   3. SDET repo must have a workflow accepting repository_dispatch
+        #      event with type "qual-frontend-deploy"
+        #
+        # To enable:  uncomment the lines below
+        # To block deploy on failure: remove '|| true' from the curl command
+        # ──────────────────────────────────────────────────────────────────────
+        # - |
+        #   if [ "$AWS_BRANCH" = "data-qa" ]; then
+        #     echo "Triggering SDET Qual Test Suite..."
+        #     curl -sf -X POST \
+        #       -H "Accept: application/vnd.github.v3+json" \
+        #       -H "Authorization: token $GH_PAT" \
+        #       "https://api.github.com/repos/${SDET_TEST_REPO}/dispatches" \
+        #       -d "{\"event_type\":\"qual-frontend-deploy\",\"client_payload\":{\"branch\":\"$AWS_BRANCH\",\"commit\":\"$AWS_COMMIT_ID\",\"app_id\":\"$AWS_APP_ID\",\"env\":\"qa\"}}" \
+        #       || true
+        #     echo "SDET test suite triggered (run is async — check $SDET_TEST_REPO for results)"
+        #   else
+        #     echo "Skipping SDET test suite (branch=$AWS_BRANCH, only runs on data-qa)"
+        #   fi
+    build:
+      commands:
+        - env | grep -e NEXT_PUBLIC_ >> .env.production
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .next/cache/**/*
+      - .npm/**/*
+      - node_modules/**/*

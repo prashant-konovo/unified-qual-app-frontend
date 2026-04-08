@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { Survey } from "../types";
 
-type Props = {
-  survey: Survey;
+interface Props {
   onPreview: () => void;
-  onSaveDraft: () => void;
   onPublish: () => void;
-};
+  onSaveDraft: () => void;
+  survey: Survey;
+}
 
 export function SurveyHeader({
   survey,

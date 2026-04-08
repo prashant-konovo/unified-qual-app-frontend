@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ModeratorFormDialog } from "@/components/moderators/moderator-form-dialog";
+import { ModeratorFormDialog } from "@/app/moderators/components/moderator-form-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,

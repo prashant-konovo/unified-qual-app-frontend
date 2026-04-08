@@ -1,23 +1,24 @@
-export type Subscription = {
-  id: string;
+// TODO: Replace mock data with API integration — see lib/api/*.ts
+export interface Subscription {
+  aeConsent: boolean;
+  aeReporting: string;
+  businessType: string;
   company: string;
-  shortCode: string;
-  plan: string;
-  currency: string;
-  phone: string;
   createdAt: string;
-  salesforceAccount: string;
+  csUser: string;
+  currency: string;
+  id: string;
   markets: string[];
   panels: string[];
-  csUser: string;
-  salesContact: string;
+  phone: string;
+  plan: string;
   pmContact: string;
+  salesContact: string;
+  salesforceAccount: string;
   serviceType: string;
-  businessType: string;
-  aeReporting: string;
-  aeConsent: boolean;
+  shortCode: string;
   skipSfValidation: boolean;
-};
+}
 
 export const mockSubscriptions: Subscription[] = [
   {

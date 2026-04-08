@@ -63,6 +63,7 @@ function slotToEvent(slot: Timeslot): CalendarEvent {
     start: slot.start,
     end: slot.end,
     project: slot.project,
+    projectId: slot.projectId,
     participant: slot.participant,
     meetingLink: slot.meetingLink,
   };
@@ -106,7 +107,7 @@ export default function Page() {
     moderatorsApi
       .getModeratorsList("active")
       .then((mods) => {
-        setModerators(mods.map((m) => ({ id: m.id, name: m.name })));
+        setModerators(mods.map((m) => ({ id: String(m.id), name: m.name })));
       })
       .catch(() => {
         toast.error("Failed to load moderators");
@@ -117,9 +118,9 @@ export default function Page() {
   useEffect(() => {
     projectsApi
       .getProjectsList()
-      .then((projs: { id?: string; _id?: string; name: string }[]) => {
+      .then((projs) => {
         setProjects(
-          projs.map((p) => ({ id: p.id ?? p._id ?? p.name, name: p.name }))
+          projs.map((p) => ({ id: String(p.id), name: p.name }))
         );
       })
       .catch(() => {
@@ -177,6 +178,7 @@ export default function Page() {
           start: ev.start,
           end: ev.end,
           project: ev.project,
+          projectId: ev.projectId,
         });
         setEvents((prev) => [...prev, slotToEvent(slot)]);
         toast.success("Availability saved");

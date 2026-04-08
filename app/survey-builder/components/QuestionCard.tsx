@@ -46,19 +46,19 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   rating: "Rating",
 };
 
-type Props = {
-  question: SurveyQuestion;
+interface Props {
   index: number;
-  isSelected: boolean;
   isDragOver: boolean;
+  isSelected: boolean;
   onClick: () => void;
   onDelete: () => void;
-  onDuplicate: () => void;
-  onDragStart: (e: React.DragEvent) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent) => void;
   onDragEnd: () => void;
-};
+  onDragOver: (e: React.DragEvent) => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDuplicate: () => void;
+  question: SurveyQuestion;
+}
 
 export function QuestionCard({
   question,

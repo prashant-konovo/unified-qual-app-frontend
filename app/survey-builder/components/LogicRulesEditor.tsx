@@ -19,14 +19,14 @@ import {
 import type { ScreeningRule, SurveyQuestion } from "../types";
 import { CONDITION_LABELS } from "../types";
 
-type Props = {
-  questionId: string;
-  question: SurveyQuestion;
-  rules: ScreeningRule[];
+interface Props {
   onAddRule: (rule: Omit<ScreeningRule, "id">) => void;
-  onUpdateRule: (id: string, updates: Partial<ScreeningRule>) => void;
   onDeleteRule: (id: string) => void;
-};
+  onUpdateRule: (id: string, updates: Partial<ScreeningRule>) => void;
+  question: SurveyQuestion;
+  questionId: string;
+  rules: ScreeningRule[];
+}
 
 export function LogicRulesEditor({
   questionId,

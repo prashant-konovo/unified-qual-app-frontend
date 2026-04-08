@@ -1,36 +1,220 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Unified Qual Frontend — Next.js
 
-## Getting Started
+Frontend for the Unified Qualitative Research platform.  
+Next.js 16 + Turbopack. Deployed to AWS Amplify (data-qa).
 
-First, run the development server:
+## Tech Stack
+- **Next.js 16** (Turbopack)
+- **React 19** + **TypeScript**
+- **Tailwind CSS** + **shadcn/ui**
+- **Axios** for API calls (proxied through Next.js rewrites)
+
+## Local Development (data-qa)
+
+### Prerequisites
+- Node.js 18+
+- Go backend running on `localhost:8080` (see backend README for SSM tunnel setup)
+
+### 1. Install Dependencies (first time only)
+
+```bash
+npm install
+```
+
+### 2. Create `.env.local`
+
+```env
+BACKEND_URL=http://localhost:8080
+```
+
+This tells Next.js to proxy `/api/*` requests to the local Go backend instead of the EKS load balancer.
+
+### 3. Start Dev Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> **Note:** First page load takes ~40-60 seconds (Turbopack initial compile). Subsequent navigations are fast.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### How API Proxying Works
 
-## Learn More
+```
+Browser → localhost:3000/api/projects
+  → Next.js rewrite (next.config.ts)
+    → BACKEND_URL/v1/projects
+      → localhost:8080/v1/projects (local Go backend)
+```
 
-To learn more about Next.js, take a look at the following resources:
+- `next.config.ts` has a rewrite rule: `/api/:path*` → `${BACKEND_URL}/v1/:path*`
+- If `BACKEND_URL` is not set, falls back to the EKS load balancer URL
+- This avoids mixed-content issues (HTTPS frontend → HTTP backend)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Auth Flow (Local)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Login page at `/login` — Email/password form + "Sign in with SSO" button
+- SSO redirects to Cognito Hosted UI (`admin-dev-auth.incrowdanswers.com`)
+- Cognito redirects back to `http://localhost:3000/login/sso-callback`
+- Tokens stored in `localStorage` (`auth_tokens`, `ic_credentials`)
+- `auth_active` cookie controls middleware redirect to `/login`
+- Automatic token refresh 5 min before JWT expiry
 
-## Deploy on Vercel
+> **SSO requirement:** `http://localhost:3000/login/sso-callback` must be in Cognito app client's allowed callback URLs (already configured for client `58jab4p7v2abqvfcvar45e3gc8`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `BACKEND_URL` | `http://localhost:8080` | API proxy target (server-side only, not exposed to browser) |
+
+## Deploy (Amplify)
+
+Amplify CI/CD is connected to the `data-qa` branch. Push triggers auto-build + deploy.
+
+```
+git push → Amplify CI/CD (lint → build → deploy)
+```
+
+## Project Structure
+
+```
+app/
+  login/          — Login page + SSO callback
+  dashboard/      — KPI cards, project breakdown, recent bookings
+  projects/       — Project list + detail (LS/MRA tabs)
+  interviews/     — Interview dashboard
+  ...
+components/
+  app-sidebar.tsx — Role-filtered navigation
+  role-guard.tsx  — Page-level access control
+lib/
+  auth-context.tsx — Auth state, token refresh, role mapping
+  token-manager.ts — Token storage, JWT parsing, role extraction
+  axios.ts         — API client with auth headers + 401 handling
+  api/             — Domain API modules (projects, surveys, bookings, etc.)
+```
+
+## Testing
+
+### Component Tests (16 tests, Vitest + React Testing Library)
+
+Component tests use **Vitest** + **React Testing Library** with jsdom environment.
+
+**Run all component tests:**
+```bash
+# Step 1: Run all tests (single run)
+npm test
+
+# Step 2 (optional): Run in watch mode (re-runs on file change)
+npm run test:watch
+```
+
+**Run a specific test file:**
+```bash
+npx vitest run components/role-guard.test.tsx
+npx vitest run app/login/login.test.tsx
+```
+
+**Test files:**
+| File | Tests | What it covers |
+|------|-------|----------------|
+| `components/role-guard.test.tsx` | 6 | Role rendering, fallback, loading state, no user |
+| `components/app-sidebar.test.tsx` | 4 | Admin/manager/moderator/unauthenticated nav filtering |
+| `app/login/login.test.tsx` | 6 | Form fields, buttons, heading, input types |
+
+### Writing New Tests
+
+1. Create a `*.test.tsx` file next to the component
+2. Mock auth context at the top of your test file:
+   ```tsx
+   import { vi } from "vitest";
+   import { setMockUser, resetMockAuth, mockAdminUser } from "@/lib/__mocks__/auth-context";
+   vi.mock("@/lib/auth-context", () => import("@/lib/__mocks__/auth-context"));
+   ```
+3. Use `setMockUser()` to configure the auth state per test
+4. Use `resetMockAuth()` in `beforeEach` to reset between tests
+
+**Available mock users:** `mockAdminUser`, `mockManagerUser`, `mockModeratorUser`
+
+**Mocks** (`lib/__mocks__/`):
+- `auth-context.tsx` — Configurable `useAuth()` mock with `setMockUser()`, `setMockIsLoading()`
+- `axios.ts` — Mock API client (prevents real HTTP calls)
+
+### E2E Tests (17 tests, Playwright)
+
+End-to-end tests run against the deployed QA environment using [Playwright](https://playwright.dev/).
+
+**Prerequisites:**
+```bash
+# Install Playwright browsers (one-time)
+npx playwright install chromium --with-deps
+```
+
+**Run all E2E tests:**
+```bash
+# Step 1: Set credentials for authenticated tests
+export E2E_USER_EMAIL="your-email@konovo.com"
+export E2E_USER_PASSWORD="your-password"
+
+# Step 2: Run all tests
+npm run test:e2e
+
+# Step 3 (optional): Run in interactive UI mode
+npm run test:e2e:ui
+```
+
+**Run unauthenticated tests only (no credentials needed):**
+```bash
+npx playwright test --project=unauthenticated
+```
+
+**Run a specific test file:**
+```bash
+npx playwright test e2e/login.spec.ts
+npx playwright test e2e/navigation.spec.ts
+```
+
+**Test files:**
+| File | Tests | What it covers |
+|------|-------|----------------|
+| `e2e/auth.setup.ts` | 1 | Login + save browser storage state for authenticated tests |
+| `e2e/login.spec.ts` | 7 | Form rendering, field validation, logo, error handling, loading state, redirect |
+| `e2e/navigation.spec.ts` | 6 | Unauthenticated redirect (3), sidebar nav, page transitions, root redirect |
+| `e2e/projects.spec.ts` | 4 | Project list, LS/MRA brand tabs, create navigation, detail navigation |
+
+**Playwright projects:**
+| Project | Auth | Description |
+|---------|------|-------------|
+| `setup` | — | Runs `auth.setup.ts` to log in and save `e2e/.auth/user.json` |
+| `chromium` | ✅ | Authenticated tests using saved storage state (depends on setup) |
+| `unauthenticated` | ❌ | Tests that verify behavior without login |
+
+**Environment variables:**
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `E2E_USER_EMAIL` | For auth tests | Login email for QA environment |
+| `E2E_USER_PASSWORD` | For auth tests | Login password for QA environment |
+| `E2E_BASE_URL` | No | Override base URL (default: `https://data-qa.d2ejnrofktz23t.amplifyapp.com`) |
+
+**CI:** E2E tests run in Amplify preBuild phase (non-blocking). Unauthenticated tests always run. Authenticated tests run when `E2E_USER_EMAIL` + `E2E_USER_PASSWORD` env vars are set in Amplify Console.
+
+## Security Scanning (Snyk)
+
+Snyk runs automatically in the Amplify preBuild phase:
+- **Dependency scan:** `snyk test --severity-threshold=high`
+- **SAST:** `snyk code test`
+- **Monitor:** `snyk monitor` (uploads snapshot to Snyk dashboard)
+
+Currently **non-blocking** (`|| true`). Remove to enforce after baseline is clean.
+
+`SNYK_TOKEN` must be set as an Amplify Console environment variable (App Settings → Environment Variables).
+
+To run locally:
+
+```bash
+export SNYK_TOKEN=<your-token>
+npx snyk test
+npx snyk code test
+```

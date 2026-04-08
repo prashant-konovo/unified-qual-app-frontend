@@ -13,6 +13,7 @@ export interface Interview {
   project: string;
   rewardPoints: number;
   rewardStatus: RewardStatus;
+  serviceCategory: string; // "LS" | "MRA"
   status: "Upcoming" | "Completed" | "Invalidated";
   timeRange: string;
   title: string;

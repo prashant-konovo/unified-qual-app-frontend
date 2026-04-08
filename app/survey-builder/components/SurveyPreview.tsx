@@ -20,14 +20,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { ScreeningRule, SurveyQuestion } from "../types";
 
-type Props = {
-  open: boolean;
+interface Props {
+  crowdName: string;
   onOpenChange: (v: boolean) => void;
+  open: boolean;
+  projectName: string;
   questions: SurveyQuestion[];
   rules: ScreeningRule[];
-  projectName: string;
-  crowdName: string;
-};
+}
 
 type ScreenStatus = "active" | "disqualified" | "completed";
 

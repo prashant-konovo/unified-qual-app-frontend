@@ -65,17 +65,60 @@ export interface ParticipantsFilter {
   status?: string;
 }
 
+// ── Response mapping helpers ──────────────────────────────────────────────────
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function unwrapList(body: any): any[] {
+  return Array.isArray(body?.data)
+    ? body.data
+    : Array.isArray(body)
+      ? body
+      : [];
+}
+
+function unwrapOne(body: any): any {
+  return body?.data ?? body;
+}
+
+function mapParticipant(raw: any): Participant {
+  return {
+    id: String(raw.id ?? ""),
+    name:
+      (raw.name ??
+      `${raw.firstName ?? ""} ${raw.lastName ?? ""}`.trim()) ||
+      "",
+    email: raw.email ?? "",
+    phone: raw.phone,
+    role: "participant",
+    status: raw.status ?? "active",
+    createdAt: raw.createdAt,
+    updatedAt: raw.modifiedOn ?? raw.updatedAt,
+  };
+}
+
+function mapParticipantDetail(raw: any): ParticipantDetail {
+  return {
+    ...mapParticipant(raw),
+    booking: raw.booking,
+    surveyResponse: raw.surveyResponse,
+    waitingEntry: raw.waitingEntry,
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+// ── API ──────────────────────────────────────────────────────────────────────
+
 export const participantsApi = {
   getParticipants: async (
     params: ParticipantsFilter = {}
   ): Promise<Participant[]> => {
     const response = await apiClient.get("/participants", { params });
-    return response.data;
+    return unwrapList(response.data).map(mapParticipant);
   },
 
   getParticipant: async (id: string): Promise<ParticipantDetail> => {
     const response = await apiClient.get(`/participants/${id}`);
-    return response.data;
+    return mapParticipantDetail(unwrapOne(response.data));
   },
 
   createParticipant: async (payload: {
@@ -85,7 +128,7 @@ export const participantsApi = {
     status?: "active" | "inactive";
   }): Promise<Participant> => {
     const response = await apiClient.post("/participants", payload);
-    return response.data;
+    return mapParticipant(unwrapOne(response.data));
   },
 
   submitSurvey: async (payload: {
